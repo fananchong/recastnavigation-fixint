@@ -99,7 +99,7 @@ void dtClosestPtPointTriangle(Fix16* closest, const Fix16* p,
 	}
 	
 	// P inside face region. Compute Q through its barycentric coordinates (u,v,w)
-	Fix16 denom = Fix16_One / (va + vb + vc);
+	Fix16 denom = Fix16_1 / (va + vb + vc);
 	Fix16 v = vb * denom;
 	Fix16 w = vc * denom;
 	closest[0] = a[0] + ab[0] * v + ac[0] * w;
@@ -215,7 +215,7 @@ bool dtClosestHeightPointTriangle(const Fix16* p, const Fix16* a, const Fix16* b
 	const Fix16 dot12 = dtVdot2D(v1, v2);
 	
 	// Compute barycentric coordinates
-	const Fix16 invDenom = Fix16_One / (dot00 * dot11 - dot01 * dot01);
+	const Fix16 invDenom = Fix16_1 / (dot00 * dot11 - dot01 * dot01);
 	const Fix16 u = (dot11 * dot02 - dot01 * dot12) * invDenom;
 	const Fix16 v = (dot00 * dot12 - dot01 * dot02) * invDenom;
 
@@ -225,7 +225,7 @@ bool dtClosestHeightPointTriangle(const Fix16* p, const Fix16* a, const Fix16* b
     static const Fix16 NEGATIVE_EPS = -(1e-4f);
 	
 	// If point lies inside the triangle, return interpolated ycoord.
-	if (u >= NEGATIVE_EPS && v >= NEGATIVE_EPS && (u+v) <= Fix16_One+EPS)
+	if (u >= NEGATIVE_EPS && v >= NEGATIVE_EPS && (u+v) <= Fix16_1 + EPS)
 	{
 		h = a[1] + v0[1]*u + v1[1]*v;
 		return true;
@@ -302,7 +302,7 @@ bool dtOverlapPolyPoly2D(const Fix16* polya, const int npolya,
 	{
 		const Fix16* va = &polya[j*3];
 		const Fix16* vb = &polya[i*3];
-		const Fix16 n[3] = { vb[2]-va[2], 0, Fix16_Zero -(vb[0]-va[0]) };
+		const Fix16 n[3] = { vb[2]-va[2], 0, Fix16_0 - (vb[0]-va[0]) };
 		Fix16 amin,amax,bmin,bmax;
 		projectPoly(n, polya, npolya, amin,amax);
 		projectPoly(n, polyb, npolyb, bmin,bmax);
@@ -316,7 +316,7 @@ bool dtOverlapPolyPoly2D(const Fix16* polya, const int npolya,
 	{
 		const Fix16* va = &polyb[j*3];
 		const Fix16* vb = &polyb[i*3];
-		const Fix16 n[3] = { vb[2]-va[2], 0, Fix16_Zero-(vb[0]-va[0]) };
+		const Fix16 n[3] = { vb[2]-va[2], 0, Fix16_0 - (vb[0]-va[0]) };
 		Fix16 amin,amax,bmin,bmax;
 		projectPoly(n, polya, npolya, amin,amax);
 		projectPoly(n, polyb, npolyb, bmin,bmax);
@@ -345,7 +345,7 @@ void dtRandomPointInConvexPoly(const Fix16* pts, const int npts, Fix16* areas,
 	// Find sub triangle weighted by area.
 	const Fix16 thr = s*areasum;
 	Fix16 acc = 0.0f;
-	Fix16 u = Fix16_One;
+	Fix16 u = Fix16_1;
 	int tri = npts - 1;
 	for (int i = 2; i < npts; i++) {
 		const Fix16 dacc = areas[i];
@@ -360,8 +360,8 @@ void dtRandomPointInConvexPoly(const Fix16* pts, const int npts, Fix16* areas,
 	
 	Fix16 v = dtMathSqrtf(t);
 	
-	const Fix16 a = Fix16_One - v;
-	const Fix16 b = (Fix16_One - u) * v;
+	const Fix16 a = Fix16_1 - v;
+	const Fix16 b = (Fix16_1 - u) * v;
 	const Fix16 c = u * v;
 	const Fix16* pa = &pts[0];
 	const Fix16* pb = &pts[(tri-1)*3];

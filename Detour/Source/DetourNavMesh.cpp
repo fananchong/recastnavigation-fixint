@@ -432,8 +432,8 @@ void dtNavMesh::connectExtLinks(dtMeshTile* tile, dtMeshTile* target, int side)
 						Fix16 tmax = (neia[k*2+1]-va[2]) / (vb[2]-va[2]);
 						if (tmin > tmax)
 							dtSwap(tmin,tmax);
-						link->bmin = (unsigned char)(dtClamp(tmin, 0.0f, 1.0f)*255.0f);
-						link->bmax = (unsigned char)(dtClamp(tmax, 0.0f, 1.0f)*255.0f);
+						link->bmin = (unsigned char)(int16_t)(dtClamp(tmin, Fix16_0, Fix16_1)*Fix16_255);
+						link->bmax = (unsigned char)(int16_t)(dtClamp(tmax, Fix16_0, Fix16_1)*Fix16_255);
 					}
 					else if (dir == 2 || dir == 6)
 					{
@@ -441,8 +441,8 @@ void dtNavMesh::connectExtLinks(dtMeshTile* tile, dtMeshTile* target, int side)
 						Fix16 tmax = (neia[k*2+1]-va[0]) / (vb[0]-va[0]);
 						if (tmin > tmax)
 							dtSwap(tmin,tmax);
-						link->bmin = (unsigned char)(dtClamp(tmin, 0.0f, 1.0f)*255.0f);
-						link->bmax = (unsigned char)(dtClamp(tmax, 0.0f, 1.0f)*255.0f);
+						link->bmin = (unsigned char)(int16_t)(dtClamp(tmin, Fix16_0, Fix16_1)*Fix16_255);
+						link->bmax = (unsigned char)(int16_t)(dtClamp(tmax, Fix16_0, Fix16_1)*Fix16_255);
 					}
 				}
 			}
@@ -763,12 +763,12 @@ int dtNavMesh::queryPolygonsInTile(const dtMeshTile* tile, const Fix16* qmin, co
 		Fix16 maxy = dtClamp(qmax[1], tbmin[1], tbmax[1]) - tbmin[1];
 		Fix16 maxz = dtClamp(qmax[2], tbmin[2], tbmax[2]) - tbmin[2];
 		// Quantize
-		bmin[0] = (unsigned short)(qfac * minx) & 0xfffe;
-		bmin[1] = (unsigned short)(qfac * miny) & 0xfffe;
-		bmin[2] = (unsigned short)(qfac * minz) & 0xfffe;
-		bmax[0] = (unsigned short)(qfac * maxx + 1) | 1;
-		bmax[1] = (unsigned short)(qfac * maxy + 1) | 1;
-		bmax[2] = (unsigned short)(qfac * maxz + 1) | 1;
+		bmin[0] = (unsigned short)(int16_t)(qfac * minx) & 0xfffe;
+		bmin[1] = (unsigned short)(int16_t)(qfac * miny) & 0xfffe;
+		bmin[2] = (unsigned short)(int16_t)(qfac * minz) & 0xfffe;
+		bmax[0] = (unsigned short)(int16_t)(qfac * maxx + 1) | 1;
+		bmax[1] = (unsigned short)(int16_t)(qfac * maxy + 1) | 1;
+		bmax[2] = (unsigned short)(int16_t)(qfac * maxz + 1) | 1;
 		
 		// Traverse tree
 		dtPolyRef base = getPolyRefBase(tile);

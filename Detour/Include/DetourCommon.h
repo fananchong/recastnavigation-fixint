@@ -22,8 +22,10 @@
 #include "DetourMath.h"
 #include <stddef.h>
 
-static const Fix16 Fix16_One = Fix16(1.0f);
-static const Fix16 Fix16_Zero = Fix16(0);
+static const Fix16 FLT_MAX = fix16_maximum;
+static const Fix16 Fix16_0 = Fix16(0);
+static const Fix16 Fix16_1 = Fix16(1.0f);
+static const Fix16 Fix16_255 = Fix16(255.0f);
 
 /**
 @defgroup detour Detour
@@ -63,7 +65,7 @@ template<class T> inline T dtMax(T a, T b) { return a > b ? a : b; }
 /// Returns the absolute value.
 ///  @param[in]		a	The value.
 ///  @return The absolute value of the specified value.
-template<class T> inline T dtAbs(T a) { return a < 0 ? -a : a; }
+template<class T> inline T dtAbs(T a) { return a < 0 ? T(0)-a : a; }
 
 /// Returns the square of the value.
 ///  @param[in]		a	The value.
@@ -266,7 +268,7 @@ inline Fix16 dtVdist2DSqr(const Fix16* v1, const Fix16* v2)
 ///  @param[in,out]	v	The vector to normalize. [(x, y, z)]
 inline void dtVnormalize(Fix16* v)
 {
-	Fix16 d = Fix16_One / dtMathSqrtf(dtSqr(v[0]) + dtSqr(v[1]) + dtSqr(v[2]));
+	Fix16 d = Fix16_1 / dtMathSqrtf(dtSqr(v[0]) + dtSqr(v[1]) + dtSqr(v[2]));
 	v[0] *= d;
 	v[1] *= d;
 	v[2] *= d;
