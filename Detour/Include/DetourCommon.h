@@ -22,6 +22,9 @@
 #include "DetourMath.h"
 #include <stddef.h>
 
+static const Fix16 Fix16_One = Fix16(1.0f);
+static const Fix16 Fix16_Zero = Fix16(0);
+
 /**
 @defgroup detour Detour
 
@@ -263,7 +266,7 @@ inline Fix16 dtVdist2DSqr(const Fix16* v1, const Fix16* v2)
 ///  @param[in,out]	v	The vector to normalize. [(x, y, z)]
 inline void dtVnormalize(Fix16* v)
 {
-	Fix16 d = 1.0f / dtMathSqrtf(dtSqr(v[0]) + dtSqr(v[1]) + dtSqr(v[2]));
+	Fix16 d = Fix16_One / dtMathSqrtf(dtSqr(v[0]) + dtSqr(v[1]) + dtSqr(v[2]));
 	v[0] *= d;
 	v[1] *= d;
 	v[2] *= d;
