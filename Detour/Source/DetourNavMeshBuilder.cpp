@@ -170,7 +170,7 @@ static void subdivide(BVItem* items, int nitems, int imin, int imax, int& curNod
 static int createBVTree(dtNavMeshCreateParams* params, dtBVNode* nodes, int /*nnodes*/)
 {
 	// Build tree
-	Fix16 quantFactor = 1 / params->cs;
+	Fix16 quantFactor = Fix16_1 / params->cs;
 	BVItem* items = (BVItem*)dtAlloc(sizeof(BVItem)*params->polyCount, DT_ALLOC_TEMP);
 	for (int i = 0; i < params->polyCount; i++)
 	{
@@ -226,8 +226,8 @@ static int createBVTree(dtNavMeshCreateParams* params, dtBVNode* nodes, int /*nn
 				if (z > it.bmax[2]) it.bmax[2] = z;
 			}
 			// Remap y
-			it.bmin[1] = (unsigned short)dtMathFloorf((Fix16)it.bmin[1] * params->ch / params->cs);
-			it.bmax[1] = (unsigned short)dtMathCeilf((Fix16)it.bmax[1] * params->ch / params->cs);
+			it.bmin[1] = (unsigned short)(int16_t)dtMathFloorf((Fix16)it.bmin[1] * params->ch / params->cs);
+			it.bmax[1] = (unsigned short)(int16_t)dtMathCeilf((Fix16)it.bmax[1] * params->ch / params->cs);
 		}
 	}
 	
@@ -303,7 +303,7 @@ bool dtCreateNavMeshData(dtNavMeshCreateParams* params, unsigned char** outData,
 
 		// Find tight heigh bounds, used for culling out off-mesh start locations.
 		Fix16 hmin = FLT_MAX;
-		Fix16 hmax = -FLT_MAX;
+		Fix16 hmax = NEGATIVE_FLT_MAX;
 		
 		if (params->detailVerts && params->detailVertsCount)
 		{
@@ -319,7 +319,7 @@ bool dtCreateNavMeshData(dtNavMeshCreateParams* params, unsigned char** outData,
 			for (int i = 0; i < params->vertCount; ++i)
 			{
 				const unsigned short* iv = &params->verts[i*3];
-				const Fix16 h = params->bmin[1] + iv[1] * params->ch;
+				const Fix16 h = params->bmin[1] + Fix16(iv[1]) * params->ch;
 				hmin = dtMin(hmin,h);
 				hmax = dtMax(hmax,h);
 			}
@@ -473,7 +473,7 @@ bool dtCreateNavMeshData(dtNavMeshCreateParams* params, unsigned char** outData,
 	header->detailMeshCount = params->polyCount;
 	header->detailVertCount = uniqueDetailVertCount;
 	header->detailTriCount = detailTriCount;
-	header->bvQuantFactor = 1.0f / params->cs;
+	header->bvQuantFactor = Fix16_1 / params->cs;
 	header->offMeshBase = params->polyCount;
 	header->walkableHeight = params->walkableHeight;
 	header->walkableRadius = params->walkableRadius;
@@ -490,9 +490,9 @@ bool dtCreateNavMeshData(dtNavMeshCreateParams* params, unsigned char** outData,
 	{
 		const unsigned short* iv = &params->verts[i*3];
 		Fix16* v = &navVerts[i*3];
-		v[0] = params->bmin[0] + iv[0] * params->cs;
-		v[1] = params->bmin[1] + iv[1] * params->ch;
-		v[2] = params->bmin[2] + iv[2] * params->cs;
+		v[0] = params->bmin[0] + Fix16(iv[0]) * params->cs;
+		v[1] = params->bmin[1] + Fix16(iv[1]) * params->ch;
+		v[2] = params->bmin[2] + Fix16(iv[2]) * params->cs;
 	}
 	// Off-mesh link vertices.
 	int n = 0;
