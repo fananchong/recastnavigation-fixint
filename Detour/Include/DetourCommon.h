@@ -25,6 +25,7 @@
 static const Fix16 FLT_MAX = fix16_maximum;
 static const Fix16 NEGATIVE_FLT_MAX = fix16_minimum;
 static const Fix16 Fix16_0 = Fix16(0);
+static const Fix16 Fix16_dot1 = 0.1f;
 static const Fix16 Fix16_1 = Fix16(1.0f);
 static const Fix16 Fix16_255 = Fix16(255.0f);
 

@@ -41,8 +41,8 @@ static int sweepCircleCircle(const Fix16* c0, const Fix16 r0, const Fix16* v,
 	// Overlap, calc time to exit.
 	Fix16 b = dtVdot2D(v,s);
 	Fix16 d = b*b - a*c;
-	if (d < 0.0f) return 0; // no intersection.
-	a = 1.0f / a;
+	if (d < Fix16_0) return 0; // no intersection.
+	a = Fix16_1 / a;
 	const Fix16 rd = dtMathSqrtf(d);
 	tmin = (b - rd) * a;
 	tmax = (b + rd) * a;
@@ -58,7 +58,7 @@ static int isectRaySeg(const Fix16* ap, const Fix16* u,
 	dtVsub(w,ap,bp);
 	Fix16 d = dtVperp2D(u,v);
 	if (dtMathFabsf(d) < 1e-6f) return 0;
-	d = 1.0f/d;
+	d = Fix16_1/d;
 	t = dtVperp2D(v,w) * d;
 	if (t < 0 || t > 1) return 0;
 	Fix16 s = dtVperp2D(u,w) * d;
@@ -168,16 +168,16 @@ static void normalizeArray(Fix16* arr, const int n)
 {
 	// Normalize penaly range.
 	Fix16 minPen = FLT_MAX;
-	Fix16 maxPen = -FLT_MAX;
+	Fix16 maxPen = NEGATIVE_FLT_MAX;
 	for (int i = 0; i < n; ++i)
 	{
 		minPen = dtMin(minPen, arr[i]);
 		maxPen = dtMax(maxPen, arr[i]);
 	}
 	const Fix16 penRange = maxPen-minPen;
-	const Fix16 s = penRange > 0.001f ? (1.0f / penRange) : 1;
+	const Fix16 s = penRange > 0.001f ? (Fix16_1 / penRange) : 1;
 	for (int i = 0; i < n; ++i)
-		arr[i] = dtClamp((arr[i]-minPen)*s, 0.0f, 1.0f);
+		arr[i] = dtClamp((arr[i]-minPen)*s, Fix16_0, Fix16_1);
 }
 
 void dtObstacleAvoidanceDebugData::normalizeSamples()
@@ -292,13 +292,13 @@ void dtObstacleAvoidanceQuery::prepare(const Fix16* pos, const Fix16* dvel)
 		const Fix16 a = dtTriArea2D(orig, cir->dp,dv);
 		if (a < 0.01f)
 		{
-			cir->np[0] = -cir->dp[2];
+			cir->np[0] = Fix16_0 -cir->dp[2];
 			cir->np[2] = cir->dp[0];
 		}
 		else
 		{
 			cir->np[0] = cir->dp[2];
-			cir->np[2] = -cir->dp[0];
+			cir->np[2] = Fix16_0 -cir->dp[0];
 		}
 	}	
 
@@ -334,7 +334,7 @@ Fix16 dtObstacleAvoidanceQuery::processSample(const Fix16* vcand, const Fix16 cs
 	// (see how the penalty is calculated below to understnad)
 	Fix16 minPen = minPenalty - vpen - vcpen;
 	Fix16 tThresold = (m_params.weightToi / minPen - 0.1f) * m_params.horizTime;
-	if (tThresold - m_params.horizTime > -FLT_EPSILON)
+	if (tThresold - m_params.horizTime > -0.00001f)
 		return minPenalty; // already too much
 
 	// Find min time of impact and exit amongst all obstacles.
@@ -353,7 +353,7 @@ Fix16 dtObstacleAvoidanceQuery::processSample(const Fix16* vcand, const Fix16 cs
 		dtVsub(vab, vab, cir->vel);
 		
 		// Side
-		side += dtClamp(dtMin(dtVdot2D(cir->dp,vab)*0.5f+0.5f, dtVdot2D(cir->np,vab)*2), 0.0f, 1.0f);
+		side += dtClamp(dtMin(dtVdot2D(cir->dp,vab)*0.5f+0.5f, dtVdot2D(cir->np,vab)*2), Fix16_0, Fix16_1);
 		nside++;
 		
 		Fix16 htmin = 0, htmax = 0;
@@ -361,13 +361,13 @@ Fix16 dtObstacleAvoidanceQuery::processSample(const Fix16* vcand, const Fix16 cs
 			continue;
 		
 		// Handle overlapping obstacles.
-		if (htmin < 0.0f && htmax > 0.0f)
+		if (htmin < Fix16_0 && htmax > Fix16_0)
 		{
 			// Avoid more when overlapped.
-			htmin = -htmin * 0.5f;
+			htmin = Fix16_0 -htmin * 0.5f;
 		}
 		
-		if (htmin >= 0.0f)
+		if (htmin >= Fix16_0)
 		{
 			// The closest obstacle is somewhere ahead of us, keep track of nearest obstacle.
 			if (htmin < tmin)
@@ -389,13 +389,13 @@ Fix16 dtObstacleAvoidanceQuery::processSample(const Fix16* vcand, const Fix16 cs
 			// Special case when the agent is very close to the segment.
 			Fix16 sdir[3], snorm[3];
 			dtVsub(sdir, seg->q, seg->p);
-			snorm[0] = -sdir[2];
+			snorm[0] = Fix16_0 -sdir[2];
 			snorm[2] = sdir[0];
 			// If the velocity is pointing towards the segment, no collision.
-			if (dtVdot2D(snorm, vcand) < 0.0f)
+			if (dtVdot2D(snorm, vcand) < Fix16_0)
 				continue;
 			// Else immediate collision.
-			htmin = 0.0f;
+			htmin = Fix16_0;
 		}
 		else
 		{
@@ -420,7 +420,7 @@ Fix16 dtObstacleAvoidanceQuery::processSample(const Fix16* vcand, const Fix16 cs
 		side /= nside;
 	
 	const Fix16 spen = m_params.weightSide * side;
-	const Fix16 tpen = m_params.weightToi * (1.0f/(0.1f+tmin*m_invHorizTime));
+	const Fix16 tpen = m_params.weightToi * (Fix16_1/(Fix16_dot1 +tmin*m_invHorizTime));
 	
 	const Fix16 penalty = vpen + vcpen + spen + tpen;
 	
@@ -439,9 +439,9 @@ int dtObstacleAvoidanceQuery::sampleVelocityGrid(const Fix16* pos, const Fix16 r
 	prepare(pos, dvel);
 	
 	memcpy(&m_params, params, sizeof(dtObstacleAvoidanceParams));
-	m_invHorizTime = 1.0f / m_params.horizTime;
+	m_invHorizTime = Fix16_1 / m_params.horizTime;
 	m_vmax = vmax;
-	m_invVmax = vmax > 0 ? 1.0f / vmax : FLT_MAX;
+	m_invVmax = vmax > 0 ? Fix16_1 / vmax : FLT_MAX;
 	
 	dtVset(nvel, 0,0,0);
 	
@@ -450,8 +450,8 @@ int dtObstacleAvoidanceQuery::sampleVelocityGrid(const Fix16* pos, const Fix16 r
 
 	const Fix16 cvx = dvel[0] * m_params.velBias;
 	const Fix16 cvz = dvel[2] * m_params.velBias;
-	const Fix16 cs = vmax * 2 * (1 - m_params.velBias) / (Fix16)(m_params.gridSize-1);
-	const Fix16 half = (m_params.gridSize-1)*cs*0.5f;
+	const Fix16 cs = vmax * 2 * (Fix16_1 - m_params.velBias) / (Fix16)(m_params.gridSize-1);
+	const Fix16 half = Fix16(m_params.gridSize-1)*cs*0.5f;
 		
 	Fix16 minPenalty = FLT_MAX;
 	int ns = 0;
@@ -461,9 +461,9 @@ int dtObstacleAvoidanceQuery::sampleVelocityGrid(const Fix16* pos, const Fix16 r
 		for (int x = 0; x < m_params.gridSize; ++x)
 		{
 			Fix16 vcand[3];
-			vcand[0] = cvx + x*cs - half;
+			vcand[0] = cvx + Fix16(x)*cs - half;
 			vcand[1] = 0;
-			vcand[2] = cvz + y*cs - half;
+			vcand[2] = cvz + Fix16(y)*cs - half;
 			
 			if (dtSqr(vcand[0])+dtSqr(vcand[2]) > dtSqr(vmax+cs/2)) continue;
 			
@@ -487,7 +487,7 @@ inline void dtNormalize2D(Fix16* v)
 	Fix16 d = dtMathSqrtf(v[0] * v[0] + v[2] * v[2]);
 	if (d==0)
 		return;
-	d = 1.0f / d;
+	d = Fix16_1 / d;
 	v[0] *= d;
 	v[2] *= d;
 }
@@ -511,9 +511,9 @@ int dtObstacleAvoidanceQuery::sampleVelocityAdaptive(const Fix16* pos, const Fix
 	prepare(pos, dvel);
 	
 	memcpy(&m_params, params, sizeof(dtObstacleAvoidanceParams));
-	m_invHorizTime = 1.0f / m_params.horizTime;
+	m_invHorizTime = Fix16_1 / m_params.horizTime;
 	m_vmax = vmax;
-	m_invVmax = vmax > 0 ? 1.0f / vmax : FLT_MAX;
+	m_invVmax = vmax > 0 ? Fix16_1 / vmax : FLT_MAX;
 	
 	dtVset(nvel, 0,0,0);
 	
@@ -530,7 +530,7 @@ int dtObstacleAvoidanceQuery::sampleVelocityAdaptive(const Fix16* pos, const Fix
 	
 	const int nd = dtClamp(ndivs, 1, DT_MAX_PATTERN_DIVS);
 	const int nr = dtClamp(nrings, 1, DT_MAX_PATTERN_RINGS);
-	const Fix16 da = (1.0f/nd) * DT_PI*2;
+	const Fix16 da = (Fix16_1/nd) * DT_PI*2;
 	const Fix16 ca = cosf(da);
 	const Fix16 sa = sinf(da);
 
@@ -558,7 +558,7 @@ int dtObstacleAvoidanceQuery::sampleVelocityAdaptive(const Fix16* pos, const Fix
 		{
 			// get next point on the "right" (rotate CW)
 			pat[npat*2+0] = last1[0]*ca + last1[1]*sa;
-			pat[npat*2+1] = -last1[0]*sa + last1[1]*ca;
+			pat[npat*2+1] = Fix16_0 -last1[0]*sa + last1[1]*ca;
 			// get next point on the "left" (rotate CCW)
 			pat[npat*2+2] = last2[0]*ca - last2[1]*sa;
 			pat[npat*2+3] = last2[0]*sa + last2[1]*ca;
@@ -578,7 +578,7 @@ int dtObstacleAvoidanceQuery::sampleVelocityAdaptive(const Fix16* pos, const Fix
 
 
 	// Start sampling.
-	Fix16 cr = vmax * (1.0f - m_params.velBias);
+	Fix16 cr = vmax * (Fix16_1 - m_params.velBias);
 	Fix16 res[3];
 	dtVset(res, dvel[0] * m_params.velBias, 0, dvel[2] * m_params.velBias);
 	int ns = 0;
