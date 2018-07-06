@@ -58,38 +58,38 @@ class NavMeshTesterTool : public SampleTool
 	dtPolyRef m_polys[MAX_POLYS];
 	dtPolyRef m_parent[MAX_POLYS];
 	int m_npolys;
-	float m_straightPath[MAX_POLYS*3];
+	Fix16 m_straightPath[MAX_POLYS*3];
 	unsigned char m_straightPathFlags[MAX_POLYS];
 	dtPolyRef m_straightPathPolys[MAX_POLYS];
 	int m_nstraightPath;
-	float m_polyPickExt[3];
-	float m_smoothPath[MAX_SMOOTH*3];
+	Fix16 m_polyPickExt[3];
+	Fix16 m_smoothPath[MAX_SMOOTH*3];
 	int m_nsmoothPath;
-	float m_queryPoly[4*3];
+	Fix16 m_queryPoly[4*3];
 
 	static const int MAX_RAND_POINTS = 64;
-	float m_randPoints[MAX_RAND_POINTS*3];
+	Fix16 m_randPoints[MAX_RAND_POINTS*3];
 	int m_nrandPoints;
 	bool m_randPointsInCircle;
 	
-	float m_spos[3];
-	float m_epos[3];
-	float m_hitPos[3];
-	float m_hitNormal[3];
+	Fix16 m_spos[3];
+	Fix16 m_epos[3];
+	Fix16 m_hitPos[3];
+	Fix16 m_hitNormal[3];
 	bool m_hitResult;
-	float m_distanceToWall;
-	float m_neighbourhoodRadius;
-	float m_randomRadius;
+	Fix16 m_distanceToWall;
+	Fix16 m_neighbourhoodRadius;
+	Fix16 m_randomRadius;
 	bool m_sposSet;
 	bool m_eposSet;
 
 	int m_pathIterNum;
 	dtPolyRef m_pathIterPolys[MAX_POLYS]; 
 	int m_pathIterPolyCount;
-	float m_prevIterPos[3], m_iterPos[3], m_steerPos[3], m_targetPos[3];
+	Fix16 m_prevIterPos[3], m_iterPos[3], m_steerPos[3], m_targetPos[3];
 	
 	static const int MAX_STEER_POINTS = 10;
-	float m_steerPoints[MAX_STEER_POINTS*3];
+	Fix16 m_steerPoints[MAX_STEER_POINTS*3];
 	int m_steerPointCount;
 	
 public:
@@ -99,15 +99,15 @@ public:
 	virtual void init(Sample* sample);
 	virtual void reset();
 	virtual void handleMenu();
-	virtual void handleClick(const float* s, const float* p, bool shift);
+	virtual void handleClick(const Fix16* s, const Fix16* p, bool shift);
 	virtual void handleToggle();
 	virtual void handleStep();
-	virtual void handleUpdate(const float dt);
+	virtual void handleUpdate(const Fix16 dt);
 	virtual void handleRender();
 	virtual void handleRenderOverlay(double* proj, double* model, int* view);
 
 	void recalc();
-	void drawAgent(const float* pos, float r, float h, float c, const unsigned int col);
+	void drawAgent(const Fix16* pos, Fix16 r, Fix16 h, Fix16 c, const unsigned int col);
 };
 
 #endif // NAVMESHTESTERTOOL_H

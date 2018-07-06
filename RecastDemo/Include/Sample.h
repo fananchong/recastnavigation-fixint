@@ -79,12 +79,12 @@ struct SampleTool
 	virtual void init(class Sample* sample) = 0;
 	virtual void reset() = 0;
 	virtual void handleMenu() = 0;
-	virtual void handleClick(const float* s, const float* p, bool shift) = 0;
+	virtual void handleClick(const Fix16* s, const Fix16* p, bool shift) = 0;
 	virtual void handleRender() = 0;
 	virtual void handleRenderOverlay(double* proj, double* model, int* view) = 0;
 	virtual void handleToggle() = 0;
 	virtual void handleStep() = 0;
-	virtual void handleUpdate(const float dt) = 0;
+	virtual void handleUpdate(const Fix16 dt) = 0;
 };
 
 struct SampleToolState {
@@ -93,7 +93,7 @@ struct SampleToolState {
 	virtual void reset() = 0;
 	virtual void handleRender() = 0;
 	virtual void handleRenderOverlay(double* proj, double* model, int* view) = 0;
-	virtual void handleUpdate(const float dt) = 0;
+	virtual void handleUpdate(const Fix16 dt) = 0;
 };
 
 class Sample
@@ -106,19 +106,19 @@ protected:
 
 	unsigned char m_navMeshDrawFlags;
 
-	float m_cellSize;
-	float m_cellHeight;
-	float m_agentHeight;
-	float m_agentRadius;
-	float m_agentMaxClimb;
-	float m_agentMaxSlope;
-	float m_regionMinSize;
-	float m_regionMergeSize;
-	float m_edgeMaxLen;
-	float m_edgeMaxError;
-	float m_vertsPerPoly;
-	float m_detailSampleDist;
-	float m_detailSampleMaxError;
+	Fix16 m_cellSize;
+	Fix16 m_cellHeight;
+	Fix16 m_agentHeight;
+	Fix16 m_agentRadius;
+	Fix16 m_agentMaxClimb;
+	Fix16 m_agentMaxSlope;
+	Fix16 m_regionMinSize;
+	Fix16 m_regionMergeSize;
+	Fix16 m_edgeMaxLen;
+	Fix16 m_edgeMaxError;
+	Fix16 m_vertsPerPoly;
+	Fix16 m_detailSampleDist;
+	Fix16 m_detailSampleMaxError;
 	int m_partitionType;
 
 	bool m_filterLowHangingObstacles;
@@ -150,28 +150,28 @@ public:
 	virtual void handleSettings();
 	virtual void handleTools();
 	virtual void handleDebugMode();
-	virtual void handleClick(const float* s, const float* p, bool shift);
+	virtual void handleClick(const Fix16* s, const Fix16* p, bool shift);
 	virtual void handleToggle();
 	virtual void handleStep();
 	virtual void handleRender();
 	virtual void handleRenderOverlay(double* proj, double* model, int* view);
 	virtual void handleMeshChanged(class InputGeom* geom);
 	virtual bool handleBuild();
-	virtual void handleUpdate(const float dt);
+	virtual void handleUpdate(const Fix16 dt);
 	virtual void collectSettings(struct BuildSettings& settings);
 
 	virtual class InputGeom* getInputGeom() { return m_geom; }
 	virtual class dtNavMesh* getNavMesh() { return m_navMesh; }
 	virtual class dtNavMeshQuery* getNavMeshQuery() { return m_navQuery; }
 	virtual class dtCrowd* getCrowd() { return m_crowd; }
-	virtual float getAgentRadius() { return m_agentRadius; }
-	virtual float getAgentHeight() { return m_agentHeight; }
-	virtual float getAgentClimb() { return m_agentMaxClimb; }
+	virtual Fix16 getAgentRadius() { return m_agentRadius; }
+	virtual Fix16 getAgentHeight() { return m_agentHeight; }
+	virtual Fix16 getAgentClimb() { return m_agentMaxClimb; }
 	
 	unsigned char getNavMeshDrawFlags() const { return m_navMeshDrawFlags; }
 	void setNavMeshDrawFlags(unsigned char flags) { m_navMeshDrawFlags = flags; }
 
-	void updateToolStates(const float dt);
+	void updateToolStates(const Fix16 dt);
 	void initToolStates(Sample* sample);
 	void resetToolStates();
 	void renderToolStates();

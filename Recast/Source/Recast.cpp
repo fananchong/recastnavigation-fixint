@@ -16,7 +16,6 @@
 // 3. This notice may not be removed or altered from any source distribution.
 //
 
-#include <float.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <string.h>
@@ -51,7 +50,7 @@ void rcDelete(T* ptr) {
 }  // namespace
 
 
-float rcSqrt(float x)
+Fix16 rcSqrt(Fix16 x)
 {
 	return sqrtf(x);
 }
@@ -271,20 +270,20 @@ void rcFreePolyMeshDetail(rcPolyMeshDetail* dmesh)
 	rcFree(dmesh);
 }
 
-void rcCalcBounds(const float* verts, int nv, float* bmin, float* bmax)
+void rcCalcBounds(const Fix16* verts, int nv, Fix16* bmin, Fix16* bmax)
 {
 	// Calculate bounding box.
 	rcVcopy(bmin, verts);
 	rcVcopy(bmax, verts);
 	for (int i = 1; i < nv; ++i)
 	{
-		const float* v = &verts[i*3];
+		const Fix16* v = &verts[i*3];
 		rcVmin(bmin, v);
 		rcVmax(bmax, v);
 	}
 }
 
-void rcCalcGridSize(const float* bmin, const float* bmax, float cs, int* w, int* h)
+void rcCalcGridSize(const Fix16* bmin, const Fix16* bmax, Fix16 cs, int* w, int* h)
 {
 	*w = (int)((bmax[0] - bmin[0])/cs+0.5f);
 	*h = (int)((bmax[2] - bmin[2])/cs+0.5f);
@@ -296,8 +295,8 @@ void rcCalcGridSize(const float* bmin, const float* bmax, float cs, int* w, int*
 /// 
 /// @see rcAllocHeightfield, rcHeightfield 
 bool rcCreateHeightfield(rcContext* ctx, rcHeightfield& hf, int width, int height,
-						 const float* bmin, const float* bmax,
-						 float cs, float ch)
+						 const Fix16* bmin, const Fix16* bmax,
+						 Fix16 cs, Fix16 ch)
 {
 	rcIgnoreUnused(ctx);
 	
@@ -314,9 +313,9 @@ bool rcCreateHeightfield(rcContext* ctx, rcHeightfield& hf, int width, int heigh
 	return true;
 }
 
-static void calcTriNormal(const float* v0, const float* v1, const float* v2, float* norm)
+static void calcTriNormal(const Fix16* v0, const Fix16* v1, const Fix16* v2, Fix16* norm)
 {
-	float e0[3], e1[3];
+	Fix16 e0[3], e1[3];
 	rcVsub(e0, v1, v0);
 	rcVsub(e1, v2, v0);
 	rcVcross(norm, e0, e1);
@@ -331,17 +330,17 @@ static void calcTriNormal(const float* v0, const float* v1, const float* v2, flo
 /// See the #rcConfig documentation for more information on the configuration parameters.
 /// 
 /// @see rcHeightfield, rcClearUnwalkableTriangles, rcRasterizeTriangles
-void rcMarkWalkableTriangles(rcContext* ctx, const float walkableSlopeAngle,
-							 const float* verts, int nv,
+void rcMarkWalkableTriangles(rcContext* ctx, const Fix16 walkableSlopeAngle,
+							 const Fix16* verts, int nv,
 							 const int* tris, int nt,
 							 unsigned char* areas)
 {
 	rcIgnoreUnused(ctx);
 	rcIgnoreUnused(nv);
 	
-	const float walkableThr = cosf(walkableSlopeAngle/180.0f*RC_PI);
+	const Fix16 walkableThr = cosf(walkableSlopeAngle/180.0f*RC_PI);
 
-	float norm[3];
+	Fix16 norm[3];
 	
 	for (int i = 0; i < nt; ++i)
 	{
@@ -361,16 +360,16 @@ void rcMarkWalkableTriangles(rcContext* ctx, const float walkableSlopeAngle,
 /// See the #rcConfig documentation for more information on the configuration parameters.
 /// 
 /// @see rcHeightfield, rcClearUnwalkableTriangles, rcRasterizeTriangles
-void rcClearUnwalkableTriangles(rcContext* ctx, const float walkableSlopeAngle,
-								const float* verts, int /*nv*/,
+void rcClearUnwalkableTriangles(rcContext* ctx, const Fix16 walkableSlopeAngle,
+								const Fix16* verts, int /*nv*/,
 								const int* tris, int nt,
 								unsigned char* areas)
 {
 	rcIgnoreUnused(ctx);
 	
-	const float walkableThr = cosf(walkableSlopeAngle/180.0f*RC_PI);
+	const Fix16 walkableThr = cosf(walkableSlopeAngle/180.0f*RC_PI);
 	
-	float norm[3];
+	Fix16 norm[3];
 	
 	for (int i = 0; i < nt; ++i)
 	{

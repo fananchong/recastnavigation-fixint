@@ -29,7 +29,7 @@ class Sample_TileMesh : public Sample
 protected:
 	bool m_keepInterResults;
 	bool m_buildAll;
-	float m_totalBuildTimeMs;
+	Fix16 m_totalBuildTimeMs;
 
 	unsigned char* m_triareas;
 	rcHeightfield* m_solid;
@@ -66,16 +66,16 @@ protected:
 	
 	int m_maxTiles;
 	int m_maxPolysPerTile;
-	float m_tileSize;
+	Fix16 m_tileSize;
 	
 	unsigned int m_tileCol;
-	float m_lastBuiltTileBmin[3];
-	float m_lastBuiltTileBmax[3];
-	float m_tileBuildTime;
-	float m_tileMemUsage;
+	Fix16 m_lastBuiltTileBmin[3];
+	Fix16 m_lastBuiltTileBmax[3];
+	Fix16 m_tileBuildTime;
+	Fix16 m_tileMemUsage;
 	int m_tileTriCount;
 
-	unsigned char* buildTileMesh(const int tx, const int ty, const float* bmin, const float* bmax, int& dataSize);
+	unsigned char* buildTileMesh(const int tx, const int ty, const Fix16* bmin, const Fix16* bmax, int& dataSize);
 	
 	void cleanup();
 	
@@ -95,10 +95,10 @@ public:
 	virtual bool handleBuild();
 	virtual void collectSettings(struct BuildSettings& settings);
 	
-	void getTilePos(const float* pos, int& tx, int& ty);
+	void getTilePos(const Fix16* pos, int& tx, int& ty);
 	
-	void buildTile(const float* pos);
-	void removeTile(const float* pos);
+	void buildTile(const Fix16* pos);
+	void removeTile(const Fix16* pos);
 	void buildAllTiles();
 	void removeAllTiles();
 

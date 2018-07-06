@@ -56,9 +56,9 @@ bool duDumpPolyMeshToObj(rcPolyMesh& pmesh, duFileIO* io)
 	}
 	
 	const int nvp = pmesh.nvp;
-	const float cs = pmesh.cs;
-	const float ch = pmesh.ch;
-	const float* orig = pmesh.bmin;
+	const Fix16 cs = pmesh.cs;
+	const Fix16 ch = pmesh.ch;
+	const Fix16* orig = pmesh.bmin;
 	
 	ioprintf(io, "# Recast Navmesh\n");
 	ioprintf(io, "o NavMesh\n");
@@ -68,9 +68,9 @@ bool duDumpPolyMeshToObj(rcPolyMesh& pmesh, duFileIO* io)
 	for (int i = 0; i < pmesh.nverts; ++i)
 	{
 		const unsigned short* v = &pmesh.verts[i*3];
-		const float x = orig[0] + v[0]*cs;
-		const float y = orig[1] + (v[1]+1)*ch + 0.1f;
-		const float z = orig[2] + v[2]*cs;
+		const Fix16 x = orig[0] + v[0]*cs;
+		const Fix16 y = orig[1] + (v[1]+1)*ch + 0.1f;
+		const Fix16 z = orig[2] + v[2]*cs;
 		ioprintf(io, "v %f %f %f\n", x,y,z);
 	}
 
@@ -109,7 +109,7 @@ bool duDumpPolyMeshDetailToObj(rcPolyMeshDetail& dmesh, duFileIO* io)
 
 	for (int i = 0; i < dmesh.nverts; ++i)
 	{
-		const float* v = &dmesh.verts[i*3];
+		const Fix16* v = &dmesh.verts[i*3];
 		ioprintf(io, "v %f %f %f\n", v[0],v[1],v[2]);
 	}
 	
@@ -409,7 +409,7 @@ bool duReadCompactHeightfield(struct rcCompactHeightfield& chf, duFileIO* io)
 }
 
 
-static void logLine(rcContext& ctx, rcTimerLabel label, const char* name, const float pc)
+static void logLine(rcContext& ctx, rcTimerLabel label, const char* name, const Fix16 pc)
 {
 	const int t = ctx.getAccumulatedTime(label);
 	if (t < 0) return;
@@ -418,7 +418,7 @@ static void logLine(rcContext& ctx, rcTimerLabel label, const char* name, const 
 
 void duLogBuildTimes(rcContext& ctx, const int totalTimeUsec)
 {
-	const float pc = 100.0f / totalTimeUsec;
+	const Fix16 pc = 100.0f / totalTimeUsec;
  
 	ctx.log(RC_LOG_PROGRESS, "Build Times");
 	logLine(ctx, RC_TIMER_RASTERIZE_TRIANGLES,		"- Rasterize", pc);

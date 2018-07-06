@@ -20,7 +20,6 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
-#include <float.h>
 #include "SDL.h"
 #include "SDL_opengl.h"
 #ifdef __APPLE__
@@ -79,7 +78,7 @@ void OffMeshConnectionTool::handleMenu()
 		m_bidir = true;
 }
 
-void OffMeshConnectionTool::handleClick(const float* /*s*/, const float* p, bool shift)
+void OffMeshConnectionTool::handleClick(const Fix16* /*s*/, const Fix16* p, bool shift)
 {
 	if (!m_sample) return;
 	InputGeom* geom = m_sample->getInputGeom();
@@ -89,13 +88,13 @@ void OffMeshConnectionTool::handleClick(const float* /*s*/, const float* p, bool
 	{
 		// Delete
 		// Find nearest link end-point
-		float nearestDist = FLT_MAX;
+		Fix16 nearestDist = FLT_MAX;
 		int nearestIndex = -1;
-		const float* verts = geom->getOffMeshConnectionVerts();
+		const Fix16* verts = geom->getOffMeshConnectionVerts();
 		for (int i = 0; i < geom->getOffMeshConnectionCount()*2; ++i)
 		{
-			const float* v = &verts[i*3];
-			float d = rcVdistSqr(p, v);
+			const Fix16* v = &verts[i*3];
+			Fix16 d = rcVdistSqr(p, v);
 			if (d < nearestDist)
 			{
 				nearestDist = d;
@@ -136,14 +135,14 @@ void OffMeshConnectionTool::handleStep()
 {
 }
 
-void OffMeshConnectionTool::handleUpdate(const float /*dt*/)
+void OffMeshConnectionTool::handleUpdate(const Fix16 /*dt*/)
 {
 }
 
 void OffMeshConnectionTool::handleRender()
 {
 	duDebugDraw& dd = m_sample->getDebugDraw();
-	const float s = m_sample->getAgentRadius();
+	const Fix16 s = m_sample->getAgentRadius();
 	
 	if (m_hitPosSet)
 		duDebugDrawCross(&dd, m_hitPos[0],m_hitPos[1]+0.1f,m_hitPos[2], s, duRGBA(0,0,0,128), 2.0f);

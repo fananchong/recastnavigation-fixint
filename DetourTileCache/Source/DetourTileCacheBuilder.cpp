@@ -530,16 +530,16 @@ static bool walkContour(dtTileCacheLayer& layer, int x, int y, dtTempContour& co
 }	
 
 
-static float distancePtSeg(const int x, const int z,
+static Fix16 distancePtSeg(const int x, const int z,
 						   const int px, const int pz,
 						   const int qx, const int qz)
 {
-	float pqx = (float)(qx - px);
-	float pqz = (float)(qz - pz);
-	float dx = (float)(x - px);
-	float dz = (float)(z - pz);
-	float d = pqx*pqx + pqz*pqz;
-	float t = pqx*dx + pqz*dz;
+	Fix16 pqx = (Fix16)(qx - px);
+	Fix16 pqz = (Fix16)(qz - pz);
+	Fix16 dx = (Fix16)(x - px);
+	Fix16 dz = (Fix16)(z - pz);
+	Fix16 d = pqx*pqx + pqz*pqz;
+	Fix16 t = pqx*dx + pqz*dz;
 	if (d > 0)
 		t /= d;
 	if (t < 0)
@@ -553,7 +553,7 @@ static float distancePtSeg(const int x, const int z,
 	return dx*dx + dz*dz;
 }
 
-static void simplifyContour(dtTempContour& cont, const float maxError)
+static void simplifyContour(dtTempContour& cont, const Fix16 maxError)
 {
 	cont.npoly = 0;
 	
@@ -614,7 +614,7 @@ static void simplifyContour(dtTempContour& cont, const float maxError)
 		const int bz = (int)cont.verts[bi*4+2];
 		
 		// Find maximum deviation from the segment.
-		float maxd = 0;
+		Fix16 maxd = 0;
 		int maxi = -1;
 		int ci, cinc, endi;
 		
@@ -637,7 +637,7 @@ static void simplifyContour(dtTempContour& cont, const float maxError)
 		// Tessellate only outer edges or edges between areas.
 		while (ci != endi)
 		{
-			float d = distancePtSeg(cont.verts[ci*4+0], cont.verts[ci*4+2], ax, az, bx, bz);
+			Fix16 d = distancePtSeg(cont.verts[ci*4+0], cont.verts[ci*4+2], ax, az, bx, bz);
 			if (d > maxd)
 			{
 				maxd = d;
@@ -738,7 +738,7 @@ static unsigned char getCornerHeight(dtTileCacheLayer& layer,
 // TODO: move this somewhere else, once the layer meshing is done.
 dtStatus dtBuildTileCacheContours(dtTileCacheAlloc* alloc,
 								  dtTileCacheLayer& layer,
-								  const int walkableClimb, 	const float maxError,
+								  const int walkableClimb, 	const Fix16 maxError,
 								  dtTileCacheContourSet& lcset)
 {
 	dtAssert(alloc);
@@ -1947,25 +1947,25 @@ dtStatus dtBuildTileCachePolyMesh(dtTileCacheAlloc* alloc,
 	return DT_SUCCESS;
 }
 
-dtStatus dtMarkCylinderArea(dtTileCacheLayer& layer, const float* orig, const float cs, const float ch,
-							const float* pos, const float radius, const float height, const unsigned char areaId)
+dtStatus dtMarkCylinderArea(dtTileCacheLayer& layer, const Fix16* orig, const Fix16 cs, const Fix16 ch,
+							const Fix16* pos, const Fix16 radius, const Fix16 height, const unsigned char areaId)
 {
-	float bmin[3], bmax[3];
+	Fix16 bmin[3], bmax[3];
 	bmin[0] = pos[0] - radius;
 	bmin[1] = pos[1];
 	bmin[2] = pos[2] - radius;
 	bmax[0] = pos[0] + radius;
 	bmax[1] = pos[1] + height;
 	bmax[2] = pos[2] + radius;
-	const float r2 = dtSqr(radius/cs + 0.5f);
+	const Fix16 r2 = dtSqr(radius/cs + 0.5f);
 
 	const int w = (int)layer.header->width;
 	const int h = (int)layer.header->height;
-	const float ics = 1.0f/cs;
-	const float ich = 1.0f/ch;
+	const Fix16 ics = 1.0f/cs;
+	const Fix16 ich = 1.0f/ch;
 	
-	const float px = (pos[0]-orig[0])*ics;
-	const float pz = (pos[2]-orig[2])*ics;
+	const Fix16 px = (pos[0]-orig[0])*ics;
+	const Fix16 pz = (pos[2]-orig[2])*ics;
 	
 	int minx = (int)dtMathFloorf((bmin[0]-orig[0])*ics);
 	int miny = (int)dtMathFloorf((bmin[1]-orig[1])*ich);
@@ -1988,8 +1988,8 @@ dtStatus dtMarkCylinderArea(dtTileCacheLayer& layer, const float* orig, const fl
 	{
 		for (int x = minx; x <= maxx; ++x)
 		{
-			const float dx = (float)(x+0.5f) - px;
-			const float dz = (float)(z+0.5f) - pz;
+			const Fix16 dx = (Fix16)(x+0.5f) - px;
+			const Fix16 dz = (Fix16)(z+0.5f) - pz;
 			if (dx*dx + dz*dz > r2)
 				continue;
 			const int y = layer.heights[x+z*w];
@@ -2002,13 +2002,13 @@ dtStatus dtMarkCylinderArea(dtTileCacheLayer& layer, const float* orig, const fl
 	return DT_SUCCESS;
 }
 
-dtStatus dtMarkBoxArea(dtTileCacheLayer& layer, const float* orig, const float cs, const float ch,
-					   const float* bmin, const float* bmax, const unsigned char areaId)
+dtStatus dtMarkBoxArea(dtTileCacheLayer& layer, const Fix16* orig, const Fix16 cs, const Fix16 ch,
+					   const Fix16* bmin, const Fix16* bmax, const unsigned char areaId)
 {
 	const int w = (int)layer.header->width;
 	const int h = (int)layer.header->height;
-	const float ics = 1.0f/cs;
-	const float ich = 1.0f/ch;
+	const Fix16 ics = 1.0f/cs;
+	const Fix16 ich = 1.0f/ch;
 
 	int minx = (int)floorf((bmin[0]-orig[0])*ics);
 	int miny = (int)floorf((bmin[1]-orig[1])*ich);
@@ -2041,18 +2041,18 @@ dtStatus dtMarkBoxArea(dtTileCacheLayer& layer, const float* orig, const float c
 	return DT_SUCCESS;
 }
 
-dtStatus dtMarkBoxArea(dtTileCacheLayer& layer, const float* orig, const float cs, const float ch,
-					   const float* center, const float* halfExtents, const float* rotAux, const unsigned char areaId)
+dtStatus dtMarkBoxArea(dtTileCacheLayer& layer, const Fix16* orig, const Fix16 cs, const Fix16 ch,
+					   const Fix16* center, const Fix16* halfExtents, const Fix16* rotAux, const unsigned char areaId)
 {
 	const int w = (int)layer.header->width;
 	const int h = (int)layer.header->height;
-	const float ics = 1.0f/cs;
-	const float ich = 1.0f/ch;
+	const Fix16 ics = 1.0f/cs;
+	const Fix16 ich = 1.0f/ch;
 
-	float cx = (center[0] - orig[0])*ics;
-	float cz = (center[2] - orig[2])*ics;
+	Fix16 cx = (center[0] - orig[0])*ics;
+	Fix16 cz = (center[2] - orig[2])*ics;
 	
-	float maxr = 1.41f*dtMax(halfExtents[0], halfExtents[2]);
+	Fix16 maxr = 1.41f*dtMax(halfExtents[0], halfExtents[2]);
 	int minx = (int)floorf(cx - maxr*ics);
 	int maxx = (int)floorf(cx + maxr*ics);
 	int minz = (int)floorf(cz - maxr*ics);
@@ -2070,19 +2070,19 @@ dtStatus dtMarkBoxArea(dtTileCacheLayer& layer, const float* orig, const float c
 	if (minz < 0) minz = 0;
 	if (maxz >= h) maxz = h-1;
 	
-	float xhalf = halfExtents[0]*ics + 0.5f;
-	float zhalf = halfExtents[2]*ics + 0.5f;
+	Fix16 xhalf = halfExtents[0]*ics + 0.5f;
+	Fix16 zhalf = halfExtents[2]*ics + 0.5f;
 
 	for (int z = minz; z <= maxz; ++z)
 	{
 		for (int x = minx; x <= maxx; ++x)
 		{			
-			float x2 = 2.0f*(float(x) - cx);
-			float z2 = 2.0f*(float(z) - cz);
-			float xrot = rotAux[1]*x2 + rotAux[0]*z2;
+			Fix16 x2 = 2.0f*(Fix16(x) - cx);
+			Fix16 z2 = 2.0f*(Fix16(z) - cz);
+			Fix16 xrot = rotAux[1]*x2 + rotAux[0]*z2;
 			if (xrot > xhalf || xrot < -xhalf)
 				continue;
-			float zrot = rotAux[1]*z2 - rotAux[0]*x2;
+			Fix16 zrot = rotAux[1]*z2 - rotAux[0]*x2;
 			if (zrot > zhalf || zrot < -zhalf)
 				continue;
 			const int y = layer.heights[x+z*w];

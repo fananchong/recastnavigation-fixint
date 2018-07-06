@@ -16,7 +16,6 @@
 // 3. This notice may not be removed or altered from any source distribution.
 //
 
-#include <float.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <string.h>
@@ -313,7 +312,7 @@ bool rcMedianFilterWalkableArea(rcContext* ctx, rcCompactHeightfield& chf)
 /// The value of spacial parameters are in world units.
 /// 
 /// @see rcCompactHeightfield, rcMedianFilterWalkableArea
-void rcMarkBoxArea(rcContext* ctx, const float* bmin, const float* bmax, unsigned char areaId,
+void rcMarkBoxArea(rcContext* ctx, const Fix16* bmin, const Fix16* bmax, unsigned char areaId,
 				   rcCompactHeightfield& chf)
 {
 	rcAssert(ctx);
@@ -356,13 +355,13 @@ void rcMarkBoxArea(rcContext* ctx, const float* bmin, const float* bmax, unsigne
 }
 
 
-static int pointInPoly(int nvert, const float* verts, const float* p)
+static int pointInPoly(int nvert, const Fix16* verts, const Fix16* p)
 {
 	int i, j, c = 0;
 	for (i = 0, j = nvert-1; i < nvert; j = i++)
 	{
-		const float* vi = &verts[i*3];
-		const float* vj = &verts[j*3];
+		const Fix16* vi = &verts[i*3];
+		const Fix16* vj = &verts[j*3];
 		if (((vi[2] > p[2]) != (vj[2] > p[2])) &&
 			(p[0] < (vj[0]-vi[0]) * (p[2]-vi[2]) / (vj[2]-vi[2]) + vi[0]) )
 			c = !c;
@@ -378,15 +377,15 @@ static int pointInPoly(int nvert, const float* verts, const float* p)
 /// projected onto the xz-plane at @p hmin, then extruded to @p hmax.
 /// 
 /// @see rcCompactHeightfield, rcMedianFilterWalkableArea
-void rcMarkConvexPolyArea(rcContext* ctx, const float* verts, const int nverts,
-						  const float hmin, const float hmax, unsigned char areaId,
+void rcMarkConvexPolyArea(rcContext* ctx, const Fix16* verts, const int nverts,
+						  const Fix16 hmin, const Fix16 hmax, unsigned char areaId,
 						  rcCompactHeightfield& chf)
 {
 	rcAssert(ctx);
 	
 	rcScopedTimer timer(ctx, RC_TIMER_MARK_CONVEXPOLY_AREA);
 
-	float bmin[3], bmax[3];
+	Fix16 bmin[3], bmax[3];
 	rcVcopy(bmin, verts);
 	rcVcopy(bmax, verts);
 	for (int i = 1; i < nverts; ++i)
@@ -428,7 +427,7 @@ void rcMarkConvexPolyArea(rcContext* ctx, const float* verts, const int nverts,
 					continue;
 				if ((int)s.y >= miny && (int)s.y <= maxy)
 				{
-					float p[3];
+					Fix16 p[3];
 					p[0] = chf.bmin[0] + (x+0.5f)*chf.cs; 
 					p[1] = 0;
 					p[2] = chf.bmin[2] + (z+0.5f)*chf.cs; 
@@ -443,10 +442,10 @@ void rcMarkConvexPolyArea(rcContext* ctx, const float* verts, const int nverts,
 	}
 }
 
-int rcOffsetPoly(const float* verts, const int nverts, const float offset,
-				 float* outVerts, const int maxOutVerts)
+int rcOffsetPoly(const Fix16* verts, const int nverts, const Fix16 offset,
+				 Fix16* outVerts, const int maxOutVerts)
 {
-	const float	MITER_LIMIT = 1.20f;
+	const Fix16	MITER_LIMIT = 1.20f;
 
 	int n = 0;
 
@@ -455,39 +454,39 @@ int rcOffsetPoly(const float* verts, const int nverts, const float offset,
 		const int a = (i+nverts-1) % nverts;
 		const int b = i;
 		const int c = (i+1) % nverts;
-		const float* va = &verts[a*3];
-		const float* vb = &verts[b*3];
-		const float* vc = &verts[c*3];
-		float dx0 = vb[0] - va[0];
-		float dy0 = vb[2] - va[2];
-		float d0 = dx0*dx0 + dy0*dy0;
+		const Fix16* va = &verts[a*3];
+		const Fix16* vb = &verts[b*3];
+		const Fix16* vc = &verts[c*3];
+		Fix16 dx0 = vb[0] - va[0];
+		Fix16 dy0 = vb[2] - va[2];
+		Fix16 d0 = dx0*dx0 + dy0*dy0;
 		if (d0 > 1e-6f)
 		{
 			d0 = 1.0f/rcSqrt(d0);
 			dx0 *= d0;
 			dy0 *= d0;
 		}
-		float dx1 = vc[0] - vb[0];
-		float dy1 = vc[2] - vb[2];
-		float d1 = dx1*dx1 + dy1*dy1;
+		Fix16 dx1 = vc[0] - vb[0];
+		Fix16 dy1 = vc[2] - vb[2];
+		Fix16 d1 = dx1*dx1 + dy1*dy1;
 		if (d1 > 1e-6f)
 		{
 			d1 = 1.0f/rcSqrt(d1);
 			dx1 *= d1;
 			dy1 *= d1;
 		}
-		const float dlx0 = -dy0;
-		const float dly0 = dx0;
-		const float dlx1 = -dy1;
-		const float dly1 = dx1;
-		float cross = dx1*dy0 - dx0*dy1;
-		float dmx = (dlx0 + dlx1) * 0.5f;
-		float dmy = (dly0 + dly1) * 0.5f;
-		float dmr2 = dmx*dmx + dmy*dmy;
+		const Fix16 dlx0 = -dy0;
+		const Fix16 dly0 = dx0;
+		const Fix16 dlx1 = -dy1;
+		const Fix16 dly1 = dx1;
+		Fix16 cross = dx1*dy0 - dx0*dy1;
+		Fix16 dmx = (dlx0 + dlx1) * 0.5f;
+		Fix16 dmy = (dly0 + dly1) * 0.5f;
+		Fix16 dmr2 = dmx*dmx + dmy*dmy;
 		bool bevel = dmr2 * MITER_LIMIT*MITER_LIMIT < 1.0f;
 		if (dmr2 > 1e-6f)
 		{
-			const float scale = 1.0f / dmr2;
+			const Fix16 scale = 1.0f / dmr2;
 			dmx *= scale;
 			dmy *= scale;
 		}
@@ -496,7 +495,7 @@ int rcOffsetPoly(const float* verts, const int nverts, const float offset,
 		{
 			if (n+2 >= maxOutVerts)
 				return 0;
-			float d = (1.0f - (dx0*dx1 + dy0*dy1))*0.5f;
+			Fix16 d = (1.0f - (dx0*dx1 + dy0*dy1))*0.5f;
 			outVerts[n*3+0] = vb[0] + (-dlx0+dx0*d)*offset;
 			outVerts[n*3+1] = vb[1];
 			outVerts[n*3+2] = vb[2] + (-dly0+dy0*d)*offset;
@@ -526,22 +525,22 @@ int rcOffsetPoly(const float* verts, const int nverts, const float offset,
 /// The value of spacial parameters are in world units.
 /// 
 /// @see rcCompactHeightfield, rcMedianFilterWalkableArea
-void rcMarkCylinderArea(rcContext* ctx, const float* pos,
-						const float r, const float h, unsigned char areaId,
+void rcMarkCylinderArea(rcContext* ctx, const Fix16* pos,
+						const Fix16 r, const Fix16 h, unsigned char areaId,
 						rcCompactHeightfield& chf)
 {
 	rcAssert(ctx);
 	
 	rcScopedTimer timer(ctx, RC_TIMER_MARK_CYLINDER_AREA);
 	
-	float bmin[3], bmax[3];
+	Fix16 bmin[3], bmax[3];
 	bmin[0] = pos[0] - r;
 	bmin[1] = pos[1];
 	bmin[2] = pos[2] - r;
 	bmax[0] = pos[0] + r;
 	bmax[1] = pos[1] + h;
 	bmax[2] = pos[2] + r;
-	const float r2 = r*r;
+	const Fix16 r2 = r*r;
 	
 	int minx = (int)((bmin[0]-chf.bmin[0])/chf.cs);
 	int miny = (int)((bmin[1]-chf.bmin[1])/chf.ch);
@@ -575,10 +574,10 @@ void rcMarkCylinderArea(rcContext* ctx, const float* pos,
 				
 				if ((int)s.y >= miny && (int)s.y <= maxy)
 				{
-					const float sx = chf.bmin[0] + (x+0.5f)*chf.cs; 
-					const float sz = chf.bmin[2] + (z+0.5f)*chf.cs; 
-					const float dx = sx - pos[0];
-					const float dz = sz - pos[2];
+					const Fix16 sx = chf.bmin[0] + (x+0.5f)*chf.cs; 
+					const Fix16 sz = chf.bmin[2] + (z+0.5f)*chf.cs; 
+					const Fix16 dx = sx - pos[0];
+					const Fix16 dz = sz - pos[2];
 					
 					if (dx*dx + dz*dz < r2)
 					{

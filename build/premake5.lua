@@ -7,6 +7,7 @@ workspace "recastnavigation-fixint"
         "..",
         "../Contrib",
         "../Contrib/fastlz",
+        "../Contrib/libfixmath",
         "../Contrib/SDL/include",
         "../DebugUtils/Include",
         "../Detour/Include",

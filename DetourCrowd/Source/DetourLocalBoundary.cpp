@@ -16,7 +16,6 @@
 // 3. This notice may not be removed or altered from any source distribution.
 //
 
-#include <float.h>
 #include <string.h>
 #include "DetourLocalBoundary.h"
 #include "DetourNavMeshQuery.h"
@@ -42,7 +41,7 @@ void dtLocalBoundary::reset()
 	m_nsegs = 0;
 }
 
-void dtLocalBoundary::addSegment(const float dist, const float* s)
+void dtLocalBoundary::addSegment(const Fix16 dist, const Fix16* s)
 {
 	// Insert neighbour based on the distance.
 	Segment* seg = 0;
@@ -75,13 +74,13 @@ void dtLocalBoundary::addSegment(const float dist, const float* s)
 	}
 	
 	seg->d = dist;
-	memcpy(seg->s, s, sizeof(float)*6);
+	memcpy(seg->s, s, sizeof(Fix16)*6);
 	
 	if (m_nsegs < MAX_LOCAL_SEGS)
 		m_nsegs++;
 }
 
-void dtLocalBoundary::update(dtPolyRef ref, const float* pos, const float collisionQueryRange,
+void dtLocalBoundary::update(dtPolyRef ref, const Fix16* pos, const Fix16 collisionQueryRange,
 							 dtNavMeshQuery* navquery, const dtQueryFilter* filter)
 {
 	static const int MAX_SEGS_PER_POLY = DT_VERTS_PER_POLYGON*3;
@@ -102,17 +101,17 @@ void dtLocalBoundary::update(dtPolyRef ref, const float* pos, const float collis
 	
 	// Secondly, store all polygon edges.
 	m_nsegs = 0;
-	float segs[MAX_SEGS_PER_POLY*6];
+	Fix16 segs[MAX_SEGS_PER_POLY*6];
 	int nsegs = 0;
 	for (int j = 0; j < m_npolys; ++j)
 	{
 		navquery->getPolyWallSegments(m_polys[j], filter, segs, 0, &nsegs, MAX_SEGS_PER_POLY);
 		for (int k = 0; k < nsegs; ++k)
 		{
-			const float* s = &segs[k*6];
+			const Fix16* s = &segs[k*6];
 			// Skip too distant segments.
-			float tseg;
-			const float distSqr = dtDistancePtSegSqr2D(pos, s, s+3, tseg);
+			Fix16 tseg;
+			const Fix16 distSqr = dtDistancePtSegSqr2D(pos, s, s+3, tseg);
 			if (distSqr > dtSqr(collisionQueryRange))
 				continue;
 			addSegment(distSqr, s);

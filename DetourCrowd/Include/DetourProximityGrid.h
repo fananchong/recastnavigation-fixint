@@ -19,10 +19,12 @@
 #ifndef DETOURPROXIMITYGRID_H
 #define DETOURPROXIMITYGRID_H
 
+#include <fix16.hpp>
+
 class dtProximityGrid
 {
-	float m_cellSize;
-	float m_invCellSize;
+	Fix16 m_cellSize;
+	Fix16 m_invCellSize;
 	
 	struct Item
 	{
@@ -43,22 +45,22 @@ public:
 	dtProximityGrid();
 	~dtProximityGrid();
 	
-	bool init(const int poolSize, const float cellSize);
+	bool init(const int poolSize, const Fix16 cellSize);
 	
 	void clear();
 	
 	void addItem(const unsigned short id,
-				 const float minx, const float miny,
-				 const float maxx, const float maxy);
+				 const Fix16 minx, const Fix16 miny,
+				 const Fix16 maxx, const Fix16 maxy);
 	
-	int queryItems(const float minx, const float miny,
-				   const float maxx, const float maxy,
+	int queryItems(const Fix16 minx, const Fix16 miny,
+				   const Fix16 maxx, const Fix16 maxy,
 				   unsigned short* ids, const int maxIds) const;
 	
 	int getItemCountAt(const int x, const int y) const;
 	
 	inline const int* getBounds() const { return m_bounds; }
-	inline float getCellSize() const { return m_cellSize; }
+	inline Fix16 getCellSize() const { return m_cellSize; }
 
 private:
 	// Explicitly disabled copy constructor and copy assignment operator.

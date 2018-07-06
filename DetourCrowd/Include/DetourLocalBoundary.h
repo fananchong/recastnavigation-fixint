@@ -29,18 +29,18 @@ class dtLocalBoundary
 	
 	struct Segment
 	{
-		float s[6];	///< Segment start/end
-		float d;	///< Distance for pruning.
+		Fix16 s[6];	///< Segment start/end
+		Fix16 d;	///< Distance for pruning.
 	};
 	
-	float m_center[3];
+	Fix16 m_center[3];
 	Segment m_segs[MAX_LOCAL_SEGS];
 	int m_nsegs;
 	
 	dtPolyRef m_polys[MAX_LOCAL_POLYS];
 	int m_npolys;
 
-	void addSegment(const float dist, const float* s);
+	void addSegment(const Fix16 dist, const Fix16* s);
 	
 public:
 	dtLocalBoundary();
@@ -48,14 +48,14 @@ public:
 	
 	void reset();
 	
-	void update(dtPolyRef ref, const float* pos, const float collisionQueryRange,
+	void update(dtPolyRef ref, const Fix16* pos, const Fix16 collisionQueryRange,
 				dtNavMeshQuery* navquery, const dtQueryFilter* filter);
 	
 	bool isValid(dtNavMeshQuery* navquery, const dtQueryFilter* filter);
 	
-	inline const float* getCenter() const { return m_center; }
+	inline const Fix16* getCenter() const { return m_center; }
 	inline int getSegmentCount() const { return m_nsegs; }
-	inline const float* getSegment(int i) const { return m_segs[i].s; }
+	inline const Fix16* getSegment(int i) const { return m_segs[i].s; }
 
 private:
 	// Explicitly disabled copy constructor and copy assignment operator.

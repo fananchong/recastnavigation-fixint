@@ -20,7 +20,6 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
-#include <float.h>
 #include <vector>
 #include "SDL.h"
 #include "SDL_opengl.h"
@@ -230,7 +229,7 @@ void NavMeshPruneTool::handleMenu()
 	}
 }
 
-void NavMeshPruneTool::handleClick(const float* s, const float* p, bool shift)
+void NavMeshPruneTool::handleClick(const Fix16* s, const Fix16* p, bool shift)
 {
 	rcIgnoreUnused(s);
 	rcIgnoreUnused(shift);
@@ -252,7 +251,7 @@ void NavMeshPruneTool::handleClick(const float* s, const float* p, bool shift)
 		m_flags->init(nav);
 	}
 	
-	const float halfExtents[3] = { 2, 4, 2 };
+	const Fix16 halfExtents[3] = { 2, 4, 2 };
 	dtQueryFilter filter;
 	dtPolyRef ref = 0;
 	query->findNearestPoly(p, halfExtents, &filter, &ref, 0);
@@ -268,7 +267,7 @@ void NavMeshPruneTool::handleStep()
 {
 }
 
-void NavMeshPruneTool::handleUpdate(const float /*dt*/)
+void NavMeshPruneTool::handleUpdate(const Fix16 /*dt*/)
 {
 }
 
@@ -278,7 +277,7 @@ void NavMeshPruneTool::handleRender()
 
 	if (m_hitPosSet)
 	{
-		const float s = m_sample->getAgentRadius();
+		const Fix16 s = m_sample->getAgentRadius();
 		const unsigned int col = duRGBA(255,255,255,255);
 		dd.begin(DU_DRAW_LINES);
 		dd.vertex(m_hitPos[0]-s,m_hitPos[1],m_hitPos[2], col);

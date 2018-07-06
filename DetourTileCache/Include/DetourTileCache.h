@@ -1,6 +1,7 @@
 #ifndef DETOURTILECACHE_H
 #define DETOURTILECACHE_H
 
+#include <fix16.hpp>
 #include "DetourStatus.h"
 
 
@@ -44,22 +45,22 @@ enum ObstacleType
 
 struct dtObstacleCylinder
 {
-	float pos[ 3 ];
-	float radius;
-	float height;
+	Fix16 pos[ 3 ];
+	Fix16 radius;
+	Fix16 height;
 };
 
 struct dtObstacleBox
 {
-	float bmin[ 3 ];
-	float bmax[ 3 ];
+	Fix16 bmin[ 3 ];
+	Fix16 bmax[ 3 ];
 };
 
 struct dtObstacleOrientedBox
 {
-	float center[ 3 ];
-	float halfExtents[ 3 ];
-	float rotAux[ 2 ]; //{ cos(0.5f*angle)*sin(-0.5f*angle); cos(0.5f*angle)*cos(0.5f*angle) - 0.5 }
+	Fix16 center[ 3 ];
+	Fix16 halfExtents[ 3 ];
+	Fix16 rotAux[ 2 ]; //{ cos(0.5f*angle)*sin(-0.5f*angle); cos(0.5f*angle)*cos(0.5f*angle) - 0.5 }
 };
 
 static const int DT_MAX_TOUCHED_TILES = 8;
@@ -84,13 +85,13 @@ struct dtTileCacheObstacle
 
 struct dtTileCacheParams
 {
-	float orig[3];
-	float cs, ch;
+	Fix16 orig[3];
+	Fix16 cs, ch;
 	int width, height;
-	float walkableHeight;
-	float walkableRadius;
-	float walkableClimb;
-	float maxSimplificationError;
+	Fix16 walkableHeight;
+	Fix16 walkableRadius;
+	Fix16 walkableClimb;
+	Fix16 maxSimplificationError;
 	int maxTiles;
 	int maxObstacles;
 };
@@ -140,17 +141,17 @@ public:
 	dtStatus removeTile(dtCompressedTileRef ref, unsigned char** data, int* dataSize);
 	
 	// Cylinder obstacle.
-	dtStatus addObstacle(const float* pos, const float radius, const float height, dtObstacleRef* result);
+	dtStatus addObstacle(const Fix16* pos, const Fix16 radius, const Fix16 height, dtObstacleRef* result);
 
 	// Aabb obstacle.
-	dtStatus addBoxObstacle(const float* bmin, const float* bmax, dtObstacleRef* result);
+	dtStatus addBoxObstacle(const Fix16* bmin, const Fix16* bmax, dtObstacleRef* result);
 
 	// Box obstacle: can be rotated in Y.
-	dtStatus addBoxObstacle(const float* center, const float* halfExtents, const float yRadians, dtObstacleRef* result);
+	dtStatus addBoxObstacle(const Fix16* center, const Fix16* halfExtents, const Fix16 yRadians, dtObstacleRef* result);
 	
 	dtStatus removeObstacle(const dtObstacleRef ref);
 	
-	dtStatus queryTiles(const float* bmin, const float* bmax,
+	dtStatus queryTiles(const Fix16* bmin, const Fix16* bmax,
 						dtCompressedTileRef* results, int* resultCount, const int maxResults) const;
 	
 	/// Updates the tile cache by rebuilding tiles touched by unfinished obstacle requests.
@@ -159,15 +160,15 @@ public:
 	///  @param[out]	upToDate	Whether the tile cache is fully up to date with obstacle requests and tile rebuilds.
 	///  							If the tile cache is up to date another (immediate) call to update will have no effect;
 	///  							otherwise another call will continue processing obstacle requests and tile rebuilds.
-	dtStatus update(const float dt, class dtNavMesh* navmesh, bool* upToDate = 0);
+	dtStatus update(const Fix16 dt, class dtNavMesh* navmesh, bool* upToDate = 0);
 	
 	dtStatus buildNavMeshTilesAt(const int tx, const int ty, class dtNavMesh* navmesh);
 	
 	dtStatus buildNavMeshTile(const dtCompressedTileRef ref, class dtNavMesh* navmesh);
 	
-	void calcTightTileBounds(const struct dtTileCacheLayerHeader* header, float* bmin, float* bmax) const;
+	void calcTightTileBounds(const struct dtTileCacheLayerHeader* header, Fix16* bmin, Fix16* bmax) const;
 	
-	void getObstacleBounds(const struct dtTileCacheObstacle* ob, float* bmin, float* bmax) const;
+	void getObstacleBounds(const struct dtTileCacheObstacle* ob, Fix16* bmin, Fix16* bmax) const;
 	
 
 	/// Encodes a tile id.
