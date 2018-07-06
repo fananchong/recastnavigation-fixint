@@ -37,7 +37,7 @@ project "recast"
     targetname "recast"
     libdirs { "../bin" }
     files {
-        --"../Contrib/**",
+        "../Contrib/**",
         "../DebugUtils/**",
         "../Detour/**",
         "../DetourCrowd/**",
