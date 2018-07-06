@@ -52,7 +52,7 @@ static const int MAX_COMMON_NODES = 512;
 
 inline Fix16 tween(const Fix16 t, const Fix16 t0, const Fix16 t1)
 {
-	return dtClamp((t-t0) / (t1-t0), 0.0f, 1.0f);
+	return dtClamp((t-t0) / (t1-t0), Fix16_0, Fix16_1);
 }
 
 static void integrate(dtCrowdAgent* ag, const Fix16 dt)
@@ -123,7 +123,7 @@ static void calcSmoothSteerDirection(const dtCrowdAgent* ag, Fix16* dir)
 	Fix16 len0 = dtVlen(dir0);
 	Fix16 len1 = dtVlen(dir1);
 	if (len1 > 0.001f)
-		dtVscale(dir1,dir1,1.0f/len1);
+		dtVscale(dir1,dir1,Fix16_1/len1);
 	
 	dir[0] = dir0[0] - dir1[0]*len0*0.5f;
 	dir[1] = 0;
@@ -1212,7 +1212,7 @@ void dtCrowd::update(const Fix16 dt, dtCrowdAgentDebugInfo* debug)
 		if (ag->params.updateFlags & DT_CROWD_SEPARATION)
 		{
 			const Fix16 separationDist = ag->params.collisionQueryRange; 
-			const Fix16 invSeparationDist = 1.0f / separationDist; 
+			const Fix16 invSeparationDist = Fix16_1 / separationDist; 
 			const Fix16 separationWeight = ag->params.separationWeight;
 			
 			Fix16 w = 0;
@@ -1232,7 +1232,7 @@ void dtCrowd::update(const Fix16 dt, dtCrowdAgentDebugInfo* debug)
 				if (distSqr > dtSqr(separationDist))
 					continue;
 				const Fix16 dist = dtMathSqrtf(distSqr);
-				const Fix16 weight = separationWeight * (1.0f - dtSqr(dist*invSeparationDist));
+				const Fix16 weight = separationWeight * (Fix16_1 - dtSqr(dist*invSeparationDist));
 				
 				dtVmad(disp, disp, diff, weight/dist);
 				w += 1.0f;
@@ -1241,7 +1241,7 @@ void dtCrowd::update(const Fix16 dt, dtCrowdAgentDebugInfo* debug)
 			if (w > 0.0001f)
 			{
 				// Adjust desired velocity.
-				dtVmad(dvel, dvel, disp, 1.0f/w);
+				dtVmad(dvel, dvel, disp, Fix16_1/w);
 				// Clamp desired velocity to desired speed.
 				const Fix16 speedSqr = dtVlenSqr(dvel);
 				const Fix16 desiredSqr = dtSqr(ag->desiredSpeed);
@@ -1355,14 +1355,14 @@ void dtCrowd::update(const Fix16 dt, dtCrowdAgentDebugInfo* debug)
 				{
 					// Agents on top of each other, try to choose diverging separation directions.
 					if (idx0 > idx1)
-						dtVset(diff, -ag->dvel[2],0,ag->dvel[0]);
+						dtVset(diff, Fix16_0-ag->dvel[2],0,ag->dvel[0]);
 					else
-						dtVset(diff, ag->dvel[2],0,-ag->dvel[0]);
+						dtVset(diff, ag->dvel[2],0, Fix16_0 -ag->dvel[0]);
 					pen = 0.01f;
 				}
 				else
 				{
-					pen = (1.0f/dist) * (pen*0.5f) * COLLISION_RESOLVE_FACTOR;
+					pen = (Fix16_1/dist) * (pen*0.5f) * COLLISION_RESOLVE_FACTOR;
 				}
 				
 				dtVmad(ag->disp, ag->disp, diff, pen);			
@@ -1372,7 +1372,7 @@ void dtCrowd::update(const Fix16 dt, dtCrowdAgentDebugInfo* debug)
 			
 			if (w > 0.0001f)
 			{
-				const Fix16 iw = 1.0f / w;
+				const Fix16 iw = Fix16_1 / w;
 				dtVscale(ag->disp, ag->disp, iw);
 			}
 		}
