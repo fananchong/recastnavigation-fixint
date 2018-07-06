@@ -809,12 +809,12 @@ void dtNavMeshQuery::queryPolygonsInTile(const dtMeshTile* tile, const Fix16* qm
 		Fix16 maxy = dtClamp(qmax[1], tbmin[1], tbmax[1]) - tbmin[1];
 		Fix16 maxz = dtClamp(qmax[2], tbmin[2], tbmax[2]) - tbmin[2];
 		// Quantize
-		bmin[0] = (unsigned short)(qfac * minx) & 0xfffe;
-		bmin[1] = (unsigned short)(qfac * miny) & 0xfffe;
-		bmin[2] = (unsigned short)(qfac * minz) & 0xfffe;
-		bmax[0] = (unsigned short)(qfac * maxx + 1) | 1;
-		bmax[1] = (unsigned short)(qfac * maxy + 1) | 1;
-		bmax[2] = (unsigned short)(qfac * maxz + 1) | 1;
+		bmin[0] = (unsigned short)(int16_t)(qfac * minx) & 0xfffe;
+		bmin[1] = (unsigned short)(int16_t)(qfac * miny) & 0xfffe;
+		bmin[2] = (unsigned short)(int16_t)(qfac * minz) & 0xfffe;
+		bmax[0] = (unsigned short)(int16_t)(qfac * maxx + 1) | 1;
+		bmax[1] = (unsigned short)(int16_t)(qfac * maxy + 1) | 1;
+		bmax[2] = (unsigned short)(int16_t)(qfac * maxz + 1) | 1;
 
 		// Traverse tree
 		const dtPolyRef base = m_nav->getPolyRefBase(tile);
@@ -2343,9 +2343,9 @@ dtStatus dtNavMeshQuery::getPortalPoints(dtPolyRef from, const dtPoly* fromPoly,
 		// Unpack portal limits.
 		if (link->bmin != 0 || link->bmax != 255)
 		{
-			const Fix16 s = 1.0f/255.0f;
-			const Fix16 tmin = link->bmin*s;
-			const Fix16 tmax = link->bmax*s;
+			static const Fix16 s = Fix16_1/Fix16_255;
+			const Fix16 tmin = Fix16(link->bmin)*s;
+			const Fix16 tmax = Fix16(link->bmax)*s;
 			dtVlerp(left, &fromTile->verts[v0*3], &fromTile->verts[v1*3], tmin);
 			dtVlerp(right, &fromTile->verts[v0*3], &fromTile->verts[v1*3], tmax);
 		}
@@ -2614,8 +2614,8 @@ dtStatus dtNavMeshQuery::raycast(dtPolyRef startRef, const Fix16* startPos, cons
 			{
 				// Calculate link size.
 				const Fix16 s = 1.0f/255.0f;
-				Fix16 lmin = left[2] + (right[2] - left[2])*(link->bmin*s);
-				Fix16 lmax = left[2] + (right[2] - left[2])*(link->bmax*s);
+				Fix16 lmin = left[2] + (right[2] - left[2])*(Fix16(link->bmin)*s);
+				Fix16 lmax = left[2] + (right[2] - left[2])*(Fix16(link->bmax)*s);
 				if (lmin > lmax) dtSwap(lmin, lmax);
 				
 				// Find Z intersection.
@@ -2630,8 +2630,8 @@ dtStatus dtNavMeshQuery::raycast(dtPolyRef startRef, const Fix16* startPos, cons
 			{
 				// Calculate link size.
 				const Fix16 s = 1.0f/255.0f;
-				Fix16 lmin = left[0] + (right[0] - left[0])*(link->bmin*s);
-				Fix16 lmax = left[0] + (right[0] - left[0])*(link->bmax*s);
+				Fix16 lmin = left[0] + (right[0] - left[0])*(Fix16(link->bmin)*s);
+				Fix16 lmax = left[0] + (right[0] - left[0])*(Fix16(link->bmax)*s);
 				if (lmin > lmax) dtSwap(lmin, lmax);
 				
 				// Find X intersection.
@@ -2671,11 +2671,11 @@ dtStatus dtNavMeshQuery::raycast(dtPolyRef startRef, const Fix16* startPos, cons
 			const int b = segMax+1 < nv ? segMax+1 : 0;
 			const Fix16* va = &verts[a*3];
 			const Fix16* vb = &verts[b*3];
-			const Fix16 dx = vb[0] - va[0];
+			const Fix16 dx = va[0] - vb[0];
 			const Fix16 dz = vb[2] - va[2];
 			hit->hitNormal[0] = dz;
 			hit->hitNormal[1] = 0;
-			hit->hitNormal[2] = -dx;
+			hit->hitNormal[2] = dx;
 			dtVnormalize(hit->hitNormal);
 			
 			hit->pathCount = n;
