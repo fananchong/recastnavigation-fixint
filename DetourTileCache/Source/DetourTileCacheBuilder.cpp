@@ -547,8 +547,8 @@ static Fix16 distancePtSeg(const int x, const int z,
 	else if (t > 1)
 		t = 1;
 	
-	dx = px + t*pqx - x;
-	dz = pz + t*pqz - z;
+	dx = Fix16(px) + t*pqx - x;
+	dz = Fix16(pz) + t*pqz - z;
 	
 	return dx*dx + dz*dz;
 }
@@ -1961,8 +1961,8 @@ dtStatus dtMarkCylinderArea(dtTileCacheLayer& layer, const Fix16* orig, const Fi
 
 	const int w = (int)layer.header->width;
 	const int h = (int)layer.header->height;
-	const Fix16 ics = 1.0f/cs;
-	const Fix16 ich = 1.0f/ch;
+	const Fix16 ics = Fix16_1/cs;
+	const Fix16 ich = Fix16_1/ch;
 	
 	const Fix16 px = (pos[0]-orig[0])*ics;
 	const Fix16 pz = (pos[2]-orig[2])*ics;
@@ -2007,8 +2007,8 @@ dtStatus dtMarkBoxArea(dtTileCacheLayer& layer, const Fix16* orig, const Fix16 c
 {
 	const int w = (int)layer.header->width;
 	const int h = (int)layer.header->height;
-	const Fix16 ics = 1.0f/cs;
-	const Fix16 ich = 1.0f/ch;
+	const Fix16 ics = Fix16_1/cs;
+	const Fix16 ich = Fix16_1/ch;
 
 	int minx = (int)floorf((bmin[0]-orig[0])*ics);
 	int miny = (int)floorf((bmin[1]-orig[1])*ich);
@@ -2046,13 +2046,14 @@ dtStatus dtMarkBoxArea(dtTileCacheLayer& layer, const Fix16* orig, const Fix16 c
 {
 	const int w = (int)layer.header->width;
 	const int h = (int)layer.header->height;
-	const Fix16 ics = 1.0f/cs;
-	const Fix16 ich = 1.0f/ch;
+	const Fix16 ics = Fix16_1/cs;
+	const Fix16 ich = Fix16_1/ch;
 
 	Fix16 cx = (center[0] - orig[0])*ics;
 	Fix16 cz = (center[2] - orig[2])*ics;
 	
-	Fix16 maxr = 1.41f*dtMax(halfExtents[0], halfExtents[2]);
+    static const Fix16 fix16_1dot41 = 1.41f;
+	Fix16 maxr = fix16_1dot41*dtMax(halfExtents[0], halfExtents[2]);
 	int minx = (int)floorf(cx - maxr*ics);
 	int maxx = (int)floorf(cx + maxr*ics);
 	int minz = (int)floorf(cz - maxr*ics);
@@ -2077,13 +2078,13 @@ dtStatus dtMarkBoxArea(dtTileCacheLayer& layer, const Fix16* orig, const Fix16 c
 	{
 		for (int x = minx; x <= maxx; ++x)
 		{			
-			Fix16 x2 = 2.0f*(Fix16(x) - cx);
-			Fix16 z2 = 2.0f*(Fix16(z) - cz);
+			Fix16 x2 = Fix16_2*(Fix16(x) - cx);
+			Fix16 z2 = Fix16_2*(Fix16(z) - cz);
 			Fix16 xrot = rotAux[1]*x2 + rotAux[0]*z2;
-			if (xrot > xhalf || xrot < -xhalf)
+			if (xrot > xhalf || xrot < Fix16_0-xhalf)
 				continue;
 			Fix16 zrot = rotAux[1]*z2 - rotAux[0]*x2;
-			if (zrot > zhalf || zrot < -zhalf)
+			if (zrot > zhalf || zrot < Fix16_0-zhalf)
 				continue;
 			const int y = layer.heights[x+z*w];
 			if (y < miny || y > maxy)

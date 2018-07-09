@@ -443,8 +443,8 @@ dtStatus dtTileCache::addBoxObstacle(const Fix16* center, const Fix16* halfExten
 	dtVcopy(ob->orientedBox.center, center);
 	dtVcopy(ob->orientedBox.halfExtents, halfExtents);
 
-	Fix16 coshalf= cosf(0.5f*yRadians);
-	Fix16 sinhalf = sinf(-0.5f*yRadians);
+	Fix16 coshalf= cosf(Fix16_dot5*yRadians);
+	Fix16 sinhalf = sinf(Fix16_dot5_negative*yRadians);
 	ob->orientedBox.rotAux[0] = coshalf*sinhalf;
 	ob->orientedBox.rotAux[1] = coshalf*coshalf - 0.5f;
 
@@ -482,8 +482,8 @@ dtStatus dtTileCache::queryTiles(const Fix16* bmin, const Fix16* bmax,
 	
 	int n = 0;
 	
-	const Fix16 tw = m_params.width * m_params.cs;
-	const Fix16 th = m_params.height * m_params.cs;
+	const Fix16 tw = Fix16(m_params.width) * m_params.cs;
+	const Fix16 th = Fix16(m_params.height) * m_params.cs;
 	const int tx0 = (int)dtMathFloorf((bmin[0]-m_params.orig[0]) / tw);
 	const int tx1 = (int)dtMathFloorf((bmax[0]-m_params.orig[0]) / tw);
 	const int ty0 = (int)dtMathFloorf((bmin[2]-m_params.orig[2]) / th);
@@ -779,12 +779,12 @@ dtStatus dtTileCache::buildNavMeshTile(const dtCompressedTileRef ref, dtNavMesh*
 void dtTileCache::calcTightTileBounds(const dtTileCacheLayerHeader* header, Fix16* bmin, Fix16* bmax) const
 {
 	const Fix16 cs = m_params.cs;
-	bmin[0] = header->bmin[0] + header->minx*cs;
+	bmin[0] = header->bmin[0] + Fix16(header->minx)*cs;
 	bmin[1] = header->bmin[1];
-	bmin[2] = header->bmin[2] + header->miny*cs;
-	bmax[0] = header->bmin[0] + (header->maxx+1)*cs;
+	bmin[2] = header->bmin[2] + Fix16(header->miny)*cs;
+	bmax[0] = header->bmin[0] + Fix16(header->maxx+1)*cs;
 	bmax[1] = header->bmax[1];
-	bmax[2] = header->bmin[2] + (header->maxy+1)*cs;
+	bmax[2] = header->bmin[2] + Fix16(header->maxy+1)*cs;
 }
 
 void dtTileCache::getObstacleBounds(const struct dtTileCacheObstacle* ob, Fix16* bmin, Fix16* bmax) const
@@ -808,8 +808,9 @@ void dtTileCache::getObstacleBounds(const struct dtTileCacheObstacle* ob, Fix16*
 	else if (ob->type == DT_OBSTACLE_ORIENTED_BOX)
 	{
 		const dtObstacleOrientedBox &orientedBox = ob->orientedBox;
+        static const Fix16 fix16_1dot41 = 1.41f;
 
-		Fix16 maxr = 1.41f*dtMax(orientedBox.halfExtents[0], orientedBox.halfExtents[2]);
+		Fix16 maxr = fix16_1dot41*dtMax(orientedBox.halfExtents[0], orientedBox.halfExtents[2]);
 		bmin[0] = orientedBox.center[0] - maxr;
 		bmax[0] = orientedBox.center[0] + maxr;
 		bmin[1] = orientedBox.center[1] - orientedBox.halfExtents[1];
