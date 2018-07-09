@@ -74,14 +74,14 @@ static bool circumCircle(const Fix16* p1, const Fix16* p2, const Fix16* p3,
 	rcVsub(v3, p3,p1);
 	
 	const Fix16 cp = vcross2(v1, v2, v3);
-	if (fabsf(cp) > EPS)
+	if (Fix16(fabsf(cp)) > EPS)
 	{
 		const Fix16 v1Sq = vdot2(v1,v1);
 		const Fix16 v2Sq = vdot2(v2,v2);
 		const Fix16 v3Sq = vdot2(v3,v3);
-		c[0] = (v1Sq*(v2[2]-v3[2]) + v2Sq*(v3[2]-v1[2]) + v3Sq*(v1[2]-v2[2])) / (2*cp);
+		c[0] = (v1Sq*(v2[2]-v3[2]) + v2Sq*(v3[2]-v1[2]) + v3Sq*(v1[2]-v2[2])) / (Fix16(2)*cp);
 		c[1] = 0;
-		c[2] = (v1Sq*(v3[0]-v2[0]) + v2Sq*(v1[0]-v3[0]) + v3Sq*(v2[0]-v1[0])) / (2*cp);
+		c[2] = (v1Sq*(v3[0]-v2[0]) + v2Sq*(v1[0]-v3[0]) + v3Sq*(v2[0]-v1[0])) / (Fix16(2)*cp);
 		r = vdist2(c, v1);
 		rcVadd(c, c, p1);
 		return true;
@@ -106,13 +106,14 @@ static Fix16 distPtTri(const Fix16* p, const Fix16* a, const Fix16* b, const Fix
 	const Fix16 dot12 = vdot2(v1, v2);
 	
 	// Compute barycentric coordinates
-	const Fix16 invDenom = 1.0f / (dot00 * dot11 - dot01 * dot01);
+	const Fix16 invDenom = Fix16_1 / (dot00 * dot11 - dot01 * dot01);
 	const Fix16 u = (dot11 * dot02 - dot01 * dot12) * invDenom;
 	Fix16 v = (dot00 * dot12 - dot01 * dot02) * invDenom;
 	
 	// If point lies inside the triangle, return interpolated y-coord.
 	static const Fix16 EPS = 1e-4f;
-	if (u >= -EPS && v >= -EPS && (u+v) <= 1+EPS)
+    static const Fix16 NEGATIVE_EPS = -(1e-4f);
+	if (u >= NEGATIVE_EPS && v >= NEGATIVE_EPS && (u+v) <= Fix16_1+EPS)
 	{
 		const Fix16 y = a[1] + v0[1]*u + v1[1]*v;
 		return fabsf(y-p[1]);
@@ -195,7 +196,7 @@ static Fix16 distToPoly(int nvert, const Fix16* verts, const Fix16* p)
 			c = !c;
 		dmin = rcMin(dmin, distancePtSeg2d(p, vj, vi));
 	}
-	return c ? -dmin : dmin;
+	return c ? Fix16_0-dmin : dmin;
 }
 
 
@@ -231,7 +232,7 @@ static unsigned short getHeight(const Fix16 fx, const Fix16 fy, const Fix16 fz,
 				const unsigned short nh = hp.data[nx + nz*hp.width];
 				if (nh != RC_UNSET_HEIGHT)
 				{
-					const Fix16 d = fabsf(nh*ch - fy);
+					const Fix16 d = fabsf(Fix16(nh)*ch - fy);
 					if (d < dmin)
 					{
 						h = nh;
@@ -401,12 +402,12 @@ static void completeFacet(rcContext* ctx, const Fix16* pts, int npts, int* edges
 			}
 			const Fix16 d = vdist2(c, &pts[u*3]);
 			const Fix16 tol = 0.001f;
-			if (d > r*(1+tol))
+			if (d > r*(Fix16_1+tol))
 			{
 				// Outside current circumcircle, skip.
 				continue;
 			}
-			else if (d < r*(1-tol))
+			else if (d < r*(Fix16_1-tol))
 			{
 				// Inside safe circumcircle, update circle.
 				pt = u;
@@ -655,7 +656,7 @@ static bool buildPolyDetail(rcContext* ctx, const Fix16* in, const int nin,
 	tris.resize(0);
 	
 	const Fix16 cs = chf.cs;
-	const Fix16 ics = 1.0f/cs;
+	const Fix16 ics = Fix16_1/cs;
 	
 	// Calculate minimum extents of the polygon based on input data.
 	Fix16 minExtent = polyMinExtent(verts, nverts);
@@ -705,7 +706,7 @@ static bool buildPolyDetail(rcContext* ctx, const Fix16* in, const int nin,
 				pos[0] = vj[0] + dx*u;
 				pos[1] = vj[1] + dy*u;
 				pos[2] = vj[2] + dz*u;
-				pos[1] = getHeight(pos[0],pos[1],pos[2], cs, ics, chf.ch, heightSearchRadius, hp)*chf.ch;
+				pos[1] = Fix16(getHeight(pos[0],pos[1],pos[2], cs, ics, chf.ch, heightSearchRadius, hp))*chf.ch;
 			}
 			// Simplify samples.
 			int idx[MAX_VERTS_PER_EDGE] = {0,nn};
@@ -807,11 +808,11 @@ static bool buildPolyDetail(rcContext* ctx, const Fix16* in, const int nin,
 			for (int x = x0; x < x1; ++x)
 			{
 				Fix16 pt[3];
-				pt[0] = x*sampleDist;
+				pt[0] = Fix16(x)*sampleDist;
 				pt[1] = (bmax[1]+bmin[1])*0.5f;
-				pt[2] = z*sampleDist;
+				pt[2] = Fix16(z)*sampleDist;
 				// Make sure the samples are not too close to the edges.
-				if (distToPoly(nin,in,pt) > -sampleDist/2) continue;
+				if (distToPoly(nin,in,pt) > Fix16_0-sampleDist/2) continue;
 				samples.push(x);
 				samples.push(getHeight(pt[0], pt[1], pt[2], cs, ics, chf.ch, heightSearchRadius, hp));
 				samples.push(z);
@@ -839,9 +840,9 @@ static bool buildPolyDetail(rcContext* ctx, const Fix16* in, const int nin,
 				Fix16 pt[3];
 				// The sample location is jittered to get rid of some bad triangulations
 				// which are cause by symmetrical data from the grid structure.
-				pt[0] = s[0]*sampleDist + getJitterX(i)*cs*0.1f;
-				pt[1] = s[1]*chf.ch;
-				pt[2] = s[2]*sampleDist + getJitterY(i)*cs*0.1f;
+				pt[0] = Fix16(s[0])*sampleDist + getJitterX(i)*cs*0.1f;
+				pt[1] = Fix16(s[1])*chf.ch;
+				pt[2] = Fix16(s[2])*sampleDist + getJitterY(i)*cs*0.1f;
 				Fix16 d = distToTriMesh(pt, verts, nverts, &tris[0], tris.size()/4);
 				if (d < 0) continue; // did not hit the mesh.
 				if (d > bestd)
@@ -1281,9 +1282,9 @@ bool rcBuildPolyMeshDetail(rcContext* ctx, const rcPolyMesh& mesh, const rcCompa
 		{
 			if(p[j] == RC_MESH_NULL_IDX) break;
 			const unsigned short* v = &mesh.verts[p[j]*3];
-			poly[j*3+0] = v[0]*cs;
-			poly[j*3+1] = v[1]*ch;
-			poly[j*3+2] = v[2]*cs;
+			poly[j*3+0] = Fix16(v[0])*cs;
+			poly[j*3+1] = Fix16(v[1])*ch;
+			poly[j*3+2] = Fix16(v[2])*cs;
 			npoly++;
 		}
 		

@@ -428,9 +428,9 @@ void rcMarkConvexPolyArea(rcContext* ctx, const Fix16* verts, const int nverts,
 				if ((int)s.y >= miny && (int)s.y <= maxy)
 				{
 					Fix16 p[3];
-					p[0] = chf.bmin[0] + (x+0.5f)*chf.cs; 
+					p[0] = chf.bmin[0] + Fix16(x+0.5f)*chf.cs; 
 					p[1] = 0;
-					p[2] = chf.bmin[2] + (z+0.5f)*chf.cs; 
+					p[2] = chf.bmin[2] + Fix16(z+0.5f)*chf.cs;
 
 					if (pointInPoly(nverts, verts, p))
 					{
@@ -462,7 +462,7 @@ int rcOffsetPoly(const Fix16* verts, const int nverts, const Fix16 offset,
 		Fix16 d0 = dx0*dx0 + dy0*dy0;
 		if (d0 > 1e-6f)
 		{
-			d0 = 1.0f/rcSqrt(d0);
+			d0 = Fix16_1/rcSqrt(d0);
 			dx0 *= d0;
 			dy0 *= d0;
 		}
@@ -471,13 +471,13 @@ int rcOffsetPoly(const Fix16* verts, const int nverts, const Fix16 offset,
 		Fix16 d1 = dx1*dx1 + dy1*dy1;
 		if (d1 > 1e-6f)
 		{
-			d1 = 1.0f/rcSqrt(d1);
+			d1 = Fix16_1/rcSqrt(d1);
 			dx1 *= d1;
 			dy1 *= d1;
 		}
-		const Fix16 dlx0 = -dy0;
+		const Fix16 dlx0 = Fix16_0-dy0;
 		const Fix16 dly0 = dx0;
-		const Fix16 dlx1 = -dy1;
+		const Fix16 dlx1 = Fix16_0-dy1;
 		const Fix16 dly1 = dx1;
 		Fix16 cross = dx1*dy0 - dx0*dy1;
 		Fix16 dmx = (dlx0 + dlx1) * 0.5f;
@@ -486,7 +486,7 @@ int rcOffsetPoly(const Fix16* verts, const int nverts, const Fix16 offset,
 		bool bevel = dmr2 * MITER_LIMIT*MITER_LIMIT < 1.0f;
 		if (dmr2 > 1e-6f)
 		{
-			const Fix16 scale = 1.0f / dmr2;
+			const Fix16 scale = Fix16_1 / dmr2;
 			dmx *= scale;
 			dmy *= scale;
 		}
@@ -495,14 +495,14 @@ int rcOffsetPoly(const Fix16* verts, const int nverts, const Fix16 offset,
 		{
 			if (n+2 >= maxOutVerts)
 				return 0;
-			Fix16 d = (1.0f - (dx0*dx1 + dy0*dy1))*0.5f;
-			outVerts[n*3+0] = vb[0] + (-dlx0+dx0*d)*offset;
+			Fix16 d = (Fix16_1 - (dx0*dx1 + dy0*dy1))*0.5f;
+			outVerts[n*3+0] = vb[0] + (Fix16_0-dlx0+dx0*d)*offset;
 			outVerts[n*3+1] = vb[1];
-			outVerts[n*3+2] = vb[2] + (-dly0+dy0*d)*offset;
+			outVerts[n*3+2] = vb[2] + (Fix16_0-dly0+dy0*d)*offset;
 			n++;
-			outVerts[n*3+0] = vb[0] + (-dlx1-dx1*d)*offset;
+			outVerts[n*3+0] = vb[0] + (Fix16_0-dlx1-dx1*d)*offset;
 			outVerts[n*3+1] = vb[1];
-			outVerts[n*3+2] = vb[2] + (-dly1-dy1*d)*offset;
+			outVerts[n*3+2] = vb[2] + (Fix16_0-dly1-dy1*d)*offset;
 			n++;
 		}
 		else
@@ -574,8 +574,8 @@ void rcMarkCylinderArea(rcContext* ctx, const Fix16* pos,
 				
 				if ((int)s.y >= miny && (int)s.y <= maxy)
 				{
-					const Fix16 sx = chf.bmin[0] + (x+0.5f)*chf.cs; 
-					const Fix16 sz = chf.bmin[2] + (z+0.5f)*chf.cs; 
+					const Fix16 sx = chf.bmin[0] + Fix16(x+0.5f)*chf.cs;
+					const Fix16 sz = chf.bmin[2] + Fix16(z+0.5f)*chf.cs;
 					const Fix16 dx = sx - pos[0];
 					const Fix16 dz = sz - pos[2];
 					

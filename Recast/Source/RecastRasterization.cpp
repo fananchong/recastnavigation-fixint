@@ -279,7 +279,7 @@ static bool rasterizeTri(const Fix16* v0, const Fix16* v1, const Fix16* v2,
 	for (int y = y0; y <= y1; ++y)
 	{
 		// Clip polygon to row. Store the remaining polygon as well
-		const Fix16 cz = bmin[2] + y*cs;
+		const Fix16 cz = bmin[2] + Fix16(y)*cs;
 		dividePoly(in, nvIn, inrow, &nvrow, p1, &nvIn, cz+cs, 2);
 		rcSwap(in, p1);
 		if (nvrow < 3) continue;
@@ -301,7 +301,7 @@ static bool rasterizeTri(const Fix16* v0, const Fix16* v1, const Fix16* v2,
 		for (int x = x0; x <= x1; ++x)
 		{
 			// Clip polygon to column. store the remaining polygon as well
-			const Fix16 cx = bmin[0] + x*cs;
+			const Fix16 cx = bmin[0] + Fix16(x)*cs;
 			dividePoly(inrow, nv2, p1, &nv, p2, &nv2, cx+cs, 0);
 			rcSwap(inrow, p2);
 			if (nv < 3) continue;
@@ -347,8 +347,8 @@ bool rcRasterizeTriangle(rcContext* ctx, const Fix16* v0, const Fix16* v1, const
 
 	rcScopedTimer timer(ctx, RC_TIMER_RASTERIZE_TRIANGLES);
 
-	const Fix16 ics = 1.0f/solid.cs;
-	const Fix16 ich = 1.0f/solid.ch;
+	const Fix16 ics = Fix16_1/solid.cs;
+	const Fix16 ich = Fix16_1/solid.ch;
 	if (!rasterizeTri(v0, v1, v2, area, solid, solid.bmin, solid.bmax, solid.cs, ics, ich, flagMergeThr))
 	{
 		ctx->log(RC_LOG_ERROR, "rcRasterizeTriangle: Out of memory.");
@@ -371,8 +371,8 @@ bool rcRasterizeTriangles(rcContext* ctx, const Fix16* verts, const int /*nv*/,
 
 	rcScopedTimer timer(ctx, RC_TIMER_RASTERIZE_TRIANGLES);
 	
-	const Fix16 ics = 1.0f/solid.cs;
-	const Fix16 ich = 1.0f/solid.ch;
+	const Fix16 ics = Fix16_1/solid.cs;
+	const Fix16 ich = Fix16_1/solid.ch;
 	// Rasterize triangles.
 	for (int i = 0; i < nt; ++i)
 	{
@@ -403,8 +403,8 @@ bool rcRasterizeTriangles(rcContext* ctx, const Fix16* verts, const int /*nv*/,
 
 	rcScopedTimer timer(ctx, RC_TIMER_RASTERIZE_TRIANGLES);
 	
-	const Fix16 ics = 1.0f/solid.cs;
-	const Fix16 ich = 1.0f/solid.ch;
+	const Fix16 ics = Fix16_1/solid.cs;
+	const Fix16 ich = Fix16_1/solid.ch;
 	// Rasterize triangles.
 	for (int i = 0; i < nt; ++i)
 	{
@@ -434,8 +434,8 @@ bool rcRasterizeTriangles(rcContext* ctx, const Fix16* verts, const unsigned cha
 	
 	rcScopedTimer timer(ctx, RC_TIMER_RASTERIZE_TRIANGLES);
 	
-	const Fix16 ics = 1.0f/solid.cs;
-	const Fix16 ich = 1.0f/solid.ch;
+	const Fix16 ics = Fix16_1/solid.cs;
+	const Fix16 ich = Fix16_1/solid.ch;
 	// Rasterize triangles.
 	for (int i = 0; i < nt; ++i)
 	{

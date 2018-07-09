@@ -201,8 +201,8 @@ static Fix16 distancePtSeg(const int x, const int z,
 	else if (t > 1)
 		t = 1;
 	
-	dx = px + t*pqx - x;
-	dz = pz + t*pqz - z;
+	dx = Fix16(px) + t*pqx - x;
+	dz = Fix16(pz) + t*pqz - z;
 	
 	return dx*dx + dz*dz;
 }
@@ -838,7 +838,7 @@ bool rcBuildContours(rcContext* ctx, rcCompactHeightfield& chf,
 	if (borderSize > 0)
 	{
 		// If the heightfield was build with bordersize, remove the offset.
-		const Fix16 pad = borderSize*chf.cs;
+		const Fix16 pad = Fix16(borderSize)*chf.cs;
 		cset.bmin[0] += pad;
 		cset.bmin[2] += pad;
 		cset.bmax[0] -= pad;
