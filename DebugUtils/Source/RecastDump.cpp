@@ -68,9 +68,9 @@ bool duDumpPolyMeshToObj(rcPolyMesh& pmesh, duFileIO* io)
 	for (int i = 0; i < pmesh.nverts; ++i)
 	{
 		const unsigned short* v = &pmesh.verts[i*3];
-		const Fix16 x = orig[0] + v[0]*cs;
-		const Fix16 y = orig[1] + (v[1]+1)*ch + 0.1f;
-		const Fix16 z = orig[2] + v[2]*cs;
+		const Fix16 x = orig[0] + Fix16(v[0])*cs;
+		const Fix16 y = orig[1] + Fix16(v[1]+1)*ch + 0.1f;
+		const Fix16 z = orig[2] + Fix16(v[2])*cs;
 		ioprintf(io, "v %f %f %f\n", x,y,z);
 	}
 
@@ -413,7 +413,7 @@ static void logLine(rcContext& ctx, rcTimerLabel label, const char* name, const 
 {
 	const int t = ctx.getAccumulatedTime(label);
 	if (t < 0) return;
-	ctx.log(RC_LOG_PROGRESS, "%s:\t%.2fms\t(%.1f%%)", name, t/1000.0f, t*pc);
+	ctx.log(RC_LOG_PROGRESS, "%s:\t%.2fms\t(%.1f%%)", name, t/1000.0f, t*float(pc));
 }
 
 void duLogBuildTimes(rcContext& ctx, const int totalTimeUsec)
