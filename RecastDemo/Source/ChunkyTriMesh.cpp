@@ -250,6 +250,7 @@ static bool checkOverlapSegment(const Fix16 p[2], const Fix16 q[2],
 								const Fix16 bmin[2], const Fix16 bmax[2])
 {
 	static const Fix16 EPSILON = 1e-6f;
+	static const Fix16 Fix16_1 = 1.0f;
 
 	Fix16 tmin = 0;
 	Fix16 tmax = 1;
@@ -259,7 +260,7 @@ static bool checkOverlapSegment(const Fix16 p[2], const Fix16 q[2],
 	
 	for (int i = 0; i < 2; i++)
 	{
-		if (fabsf(d[i]) < EPSILON)
+		if (Fix16(fabsf(d[i])) < EPSILON)
 		{
 			// Ray is parallel to slab. No hit if origin not within slab
 			if (p[i] < bmin[i] || p[i] > bmax[i])
@@ -268,7 +269,7 @@ static bool checkOverlapSegment(const Fix16 p[2], const Fix16 q[2],
 		else
 		{
 			// Compute intersection t value of ray with near and far plane of slab
-			Fix16 ood = 1.0f / d[i];
+			Fix16 ood = Fix16_1 / d[i];
 			Fix16 t1 = (bmin[i] - p[i]) * ood;
 			Fix16 t2 = (bmax[i] - p[i]) * ood;
 			if (t1 > t2) { Fix16 tmp = t1; t1 = t2; t2 = tmp; }

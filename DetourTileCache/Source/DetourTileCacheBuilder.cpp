@@ -23,6 +23,9 @@
 #include "DetourTileCacheBuilder.h"
 #include <string.h>
 
+static const Fix16 Fix16_0 = Fix16(0);
+static const Fix16 Fix16_1 = Fix16(1.0f);
+static const Fix16 Fix16_2 = Fix16(2.0f);
 
 template<class T> class dtFixedArray
 {

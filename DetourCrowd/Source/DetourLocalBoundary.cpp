@@ -22,6 +22,7 @@
 #include "DetourCommon.h"
 #include "DetourAssert.h"
 
+static const Fix16 FLT_MAX = fix16_maximum;
 
 dtLocalBoundary::dtLocalBoundary() :
 	m_nsegs(0),

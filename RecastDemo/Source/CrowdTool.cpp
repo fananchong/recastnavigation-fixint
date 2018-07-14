@@ -51,12 +51,12 @@ static bool isectSegAABB(const Fix16* sp, const Fix16* sq,
 	Fix16 d[3];
 	dtVsub(d, sq, sp);
 	tmin = 0;  // set to -FLT_MAX to get first hit on line
-	tmax = FLT_MAX;		// set to max distance ray can travel (for segment)
+	tmax = FLT_MAX_;		// set to max distance ray can travel (for segment)
 	
 	// For all three slabs
 	for (int i = 0; i < 3; i++)
 	{
-		if (fabsf(d[i]) < EPS)
+		if (Fix16(fabsf(d[i])) < EPS)
 		{
 			// Ray is parallel to slab. No hit if origin not within slab
 			if (sp[i] < amin[i] || sp[i] > amax[i])
@@ -242,7 +242,7 @@ void CrowdToolState::handleRender()
 	// Occupancy grid.
 	if (m_toolParams.m_showGrid)
 	{
-		Fix16 gridy = -FLT_MAX;
+		Fix16 gridy = -FLT_MAX_;
 		for (int i = 0; i < crowd->getAgentCount(); ++i)
 		{
 			const dtCrowdAgent* ag = crowd->getAgent(i);
@@ -765,7 +765,7 @@ int CrowdToolState::hitTestAgents(const Fix16* s, const Fix16* p)
 	dtCrowd* crowd = m_sample->getCrowd();
 	
 	int isel = -1;
-	Fix16 tsel = FLT_MAX;
+	Fix16 tsel = FLT_MAX_;
 
 	for (int i = 0; i < crowd->getAgentCount(); ++i)
 	{

@@ -21,16 +21,6 @@
 
 #include <fix16.hpp>
 
-static const Fix16 FLT_MAX = fix16_maximum;
-static const Fix16 NEGATIVE_FLT_MAX = fix16_minimum;
-static const Fix16 Fix16_0 = Fix16(0);
-static const Fix16 Fix16_dot1 = 0.1f;
-static const Fix16 Fix16_dot5 = 0.5f;
-static const Fix16 Fix16_dot5_negative = -0.5f;
-static const Fix16 Fix16_1 = Fix16(1.0f);
-static const Fix16 Fix16_2 = Fix16(2.0f);
-static const Fix16 Fix16_255 = Fix16(255.0f);
-
 /// The value of PI used by Recast.
 static const Fix16 RC_PI = 3.14159265f;
 
@@ -767,6 +757,7 @@ inline Fix16 rcVdistSqr(const Fix16* v1, const Fix16* v2)
 ///  @param[in,out]	v	The vector to normalize. [(x, y, z)]
 inline void rcVnormalize(Fix16* v)
 {
+	static const Fix16 Fix16_1 = Fix16(1.0f);
 	Fix16 d = Fix16_1 / rcSqrt(rcSqr(v[0]) + rcSqr(v[1]) + rcSqr(v[2]));
 	v[0] *= d;
 	v[1] *= d;

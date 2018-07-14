@@ -24,6 +24,7 @@
 #include "DetourAlloc.h"
 #include "DetourAssert.h"
 
+static const Fix16 Fix16_1 = Fix16(1.0f);
 
 dtProximityGrid* dtAllocProximityGrid()
 {

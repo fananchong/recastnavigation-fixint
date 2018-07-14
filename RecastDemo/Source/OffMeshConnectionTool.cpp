@@ -88,7 +88,7 @@ void OffMeshConnectionTool::handleClick(const Fix16* /*s*/, const Fix16* p, bool
 	{
 		// Delete
 		// Find nearest link end-point
-		Fix16 nearestDist = FLT_MAX;
+		Fix16 nearestDist = FLT_MAX_;
 		int nearestIndex = -1;
 		const Fix16* verts = geom->getOffMeshConnectionVerts();
 		for (int i = 0; i < geom->getOffMeshConnectionCount()*2; ++i)

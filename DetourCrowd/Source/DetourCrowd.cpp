@@ -29,6 +29,8 @@
 #include "DetourAssert.h"
 #include "DetourAlloc.h"
 
+static const Fix16 Fix16_0 = Fix16(0);
+static const Fix16 Fix16_1 = Fix16(1.0f);
 
 dtCrowd* dtAllocCrowd()
 {

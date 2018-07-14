@@ -26,6 +26,10 @@
 #include "DetourAlloc.h"
 #include "DetourAssert.h"
 
+static const Fix16 Fix16_1 = Fix16(1.0f);
+static const Fix16 FLT_MAX = fix16_maximum;
+static const Fix16 NEGATIVE_FLT_MAX = fix16_minimum;
+
 static unsigned short MESH_NULL_IDX = 0xffff;
 
 

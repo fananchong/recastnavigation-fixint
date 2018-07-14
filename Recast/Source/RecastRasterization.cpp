@@ -23,6 +23,8 @@
 #include "RecastAlloc.h"
 #include "RecastAssert.h"
 
+static const Fix16 Fix16_1 = Fix16(1.0f);
+
 inline bool overlapBounds(const Fix16* amin, const Fix16* amax, const Fix16* bmin, const Fix16* bmax)
 {
 	bool overlap = true;

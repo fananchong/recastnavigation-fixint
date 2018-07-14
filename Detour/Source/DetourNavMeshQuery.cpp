@@ -59,6 +59,10 @@
 ///
 /// @see dtNavMeshQuery
 
+static const Fix16 Fix16_1 = Fix16(1.0f);
+static const Fix16 Fix16_255 = Fix16(255.0f);
+static const Fix16 FLT_MAX = fix16_maximum;
+
 dtQueryFilter::dtQueryFilter() :
 	m_includeFlags(0xffff),
 	m_excludeFlags(0)

@@ -26,6 +26,10 @@
 #include "DetourAssert.h"
 #include <new>
 
+static const Fix16 Fix16_0 = Fix16(0);
+static const Fix16 Fix16_1 = Fix16(1.0f);
+static const Fix16 Fix16_255 = Fix16(255.0f);
+static const Fix16 FLT_MAX = fix16_maximum;
 
 inline bool overlapSlabs(const Fix16* amin, const Fix16* amax,
 						 const Fix16* bmin, const Fix16* bmax,

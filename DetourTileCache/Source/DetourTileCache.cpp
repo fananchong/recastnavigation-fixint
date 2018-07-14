@@ -9,6 +9,9 @@
 #include <string.h>
 #include <new>
 
+static const Fix16 Fix16_dot5 = 0.5f;
+static const Fix16 Fix16_dot5_negative = -0.5f;
+
 dtTileCache* dtAllocTileCache()
 {
 	void* mem = dtAlloc(sizeof(dtTileCache), DT_ALLOC_PERM);

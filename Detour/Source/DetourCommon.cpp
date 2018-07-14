@@ -19,6 +19,9 @@
 #include "DetourCommon.h"
 #include "DetourMath.h"
 
+static const Fix16 Fix16_0 = Fix16(0);
+static const Fix16 Fix16_1 = Fix16(1.0f);
+
 //////////////////////////////////////////////////////////////////////////////////////////
 
 void dtClosestPtPointTriangle(Fix16* closest, const Fix16* p,
