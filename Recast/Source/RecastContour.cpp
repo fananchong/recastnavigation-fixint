@@ -184,16 +184,16 @@ static void walkContour(int x, int y, int i,
 	}
 }
 
-static Fix16 distancePtSeg(const int x, const int z,
+static float distancePtSeg(const int x, const int z,
 						   const int px, const int pz,
 						   const int qx, const int qz)
 {
-	Fix16 pqx = (Fix16)(qx - px);
-	Fix16 pqz = (Fix16)(qz - pz);
-	Fix16 dx = (Fix16)(x - px);
-	Fix16 dz = (Fix16)(z - pz);
-	Fix16 d = pqx*pqx + pqz*pqz;
-	Fix16 t = pqx*dx + pqz*dz;
+	float pqx = (float)(qx - px);
+	float pqz = (float)(qz - pz);
+	float dx = (float)(x - px);
+	float dz = (float)(z - pz);
+	float d = pqx*pqx + pqz*pqz;
+	float t = pqx*dx + pqz*dz;
 	if (d > 0)
 		t /= d;
 	if (t < 0)
@@ -201,14 +201,14 @@ static Fix16 distancePtSeg(const int x, const int z,
 	else if (t > 1)
 		t = 1;
 	
-	dx = Fix16(px) + t*pqx - x;
-	dz = Fix16(pz) + t*pqz - z;
+	dx = px + t*pqx - x;
+	dz = pz + t*pqz - z;
 	
 	return dx*dx + dz*dz;
 }
 
 static void simplifyContour(rcIntArray& points, rcIntArray& simplified,
-							const Fix16 maxError, const int maxEdgeLen, const int buildFlags)
+							const float maxError, const int maxEdgeLen, const int buildFlags)
 {
 	// Add initial points.
 	bool hasConnections = false;
@@ -300,7 +300,7 @@ static void simplifyContour(rcIntArray& points, rcIntArray& simplified,
 		int bi = simplified[ii*4+3];
 
 		// Find maximum deviation from the segment.
-		Fix16 maxd = 0;
+		float maxd = 0;
 		int maxi = -1;
 		int ci, cinc, endi;
 
@@ -328,7 +328,7 @@ static void simplifyContour(rcIntArray& points, rcIntArray& simplified,
 		{
 			while (ci != endi)
 			{
-				Fix16 d = distancePtSeg(points[ci*4+0], points[ci*4+2], ax, az, bx, bz);
+				float d = distancePtSeg(points[ci*4+0], points[ci*4+2], ax, az, bx, bz);
 				if (d > maxd)
 				{
 					maxd = d;
@@ -822,7 +822,7 @@ static void mergeRegionHoles(rcContext* ctx, rcContourRegion& region)
 ///
 /// @see rcAllocContourSet, rcCompactHeightfield, rcContourSet, rcConfig
 bool rcBuildContours(rcContext* ctx, rcCompactHeightfield& chf,
-					 const Fix16 maxError, const int maxEdgeLen,
+					 const float maxError, const int maxEdgeLen,
 					 rcContourSet& cset, const int buildFlags)
 {
 	rcAssert(ctx);
@@ -838,7 +838,7 @@ bool rcBuildContours(rcContext* ctx, rcCompactHeightfield& chf,
 	if (borderSize > 0)
 	{
 		// If the heightfield was build with bordersize, remove the offset.
-		const Fix16 pad = Fix16(borderSize)*chf.cs;
+		const float pad = borderSize*chf.cs;
 		cset.bmin[0] += pad;
 		cset.bmin[2] += pad;
 		cset.bmax[0] -= pad;

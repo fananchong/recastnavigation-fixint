@@ -49,9 +49,9 @@ struct CrowdToolParams
 	bool m_optimizeVis;
 	bool m_optimizeTopo;
 	bool m_obstacleAvoidance;
-	Fix16 m_obstacleAvoidanceType;
+	float m_obstacleAvoidanceType;
 	bool m_separation;
-	Fix16 m_separationWeight;
+	float m_separationWeight;
 };
 
 class CrowdToolState : public SampleToolState
@@ -60,7 +60,7 @@ class CrowdToolState : public SampleToolState
 	dtNavMesh* m_nav;
 	dtCrowd* m_crowd;
 	
-	Fix16 m_targetPos[3];
+	float m_targetPos[3];
 	dtPolyRef m_targetRef;
 
 	dtCrowdAgentDebugInfo m_agentDebug;
@@ -70,7 +70,7 @@ class CrowdToolState : public SampleToolState
 	static const int MAX_AGENTS = 128;
 	struct AgentTrail
 	{
-		Fix16 trail[AGENT_MAX_TRAIL*3];
+		float trail[AGENT_MAX_TRAIL*3];
 		int htrail;
 	};
 	AgentTrail m_trails[MAX_AGENTS];
@@ -90,18 +90,18 @@ public:
 	virtual void reset();
 	virtual void handleRender();
 	virtual void handleRenderOverlay(double* proj, double* model, int* view);
-	virtual void handleUpdate(const Fix16 dt);
+	virtual void handleUpdate(const float dt);
 
 	inline bool isRunning() const { return m_run; }
 	inline void setRunning(const bool s) { m_run = s; }
 	
-	void addAgent(const Fix16* pos);
+	void addAgent(const float* pos);
 	void removeAgent(const int idx);
 	void hilightAgent(const int idx);
 	void updateAgentParams();
-	int hitTestAgents(const Fix16* s, const Fix16* p);
-	void setMoveTarget(const Fix16* p, bool adjust);
-	void updateTick(const Fix16 dt);
+	int hitTestAgents(const float* s, const float* p);
+	void setMoveTarget(const float* p, bool adjust);
+	void updateTick(const float dt);
 
 	inline CrowdToolParams* getToolParams() { return &m_toolParams; }
 	
@@ -133,10 +133,10 @@ public:
 	virtual void init(Sample* sample);
 	virtual void reset();
 	virtual void handleMenu();
-	virtual void handleClick(const Fix16* s, const Fix16* p, bool shift);
+	virtual void handleClick(const float* s, const float* p, bool shift);
 	virtual void handleToggle();
 	virtual void handleStep();
-	virtual void handleUpdate(const Fix16 dt);
+	virtual void handleUpdate(const float dt);
 	virtual void handleRender();
 	virtual void handleRenderOverlay(double* proj, double* model, int* view);
 };

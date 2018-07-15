@@ -20,6 +20,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <float.h>
 #include <new>
 #include "SDL.h"
 #include "SDL_opengl.h"
@@ -57,16 +58,16 @@
 static const int EXPECTED_LAYERS_PER_TILE = 4;
 
 
-static bool isectSegAABB(const Fix16* sp, const Fix16* sq,
-						 const Fix16* amin, const Fix16* amax,
-						 Fix16& tmin, Fix16& tmax)
+static bool isectSegAABB(const float* sp, const float* sq,
+						 const float* amin, const float* amax,
+						 float& tmin, float& tmax)
 {
-	static const Fix16 EPS = 1e-6f;
+	static const float EPS = 1e-6f;
 	
-	Fix16 d[3];
+	float d[3];
 	rcVsub(d, sq, sp);
 	tmin = 0;  // set to -FLT_MAX to get first hit on line
-	tmax = FLT_MAX_;		// set to max distance ray can travel (for segment)
+	tmax = FLT_MAX;		// set to max distance ray can travel (for segment)
 	
 	// For all three slabs
 	for (int i = 0; i < 3; i++)
@@ -80,9 +81,9 @@ static bool isectSegAABB(const Fix16* sp, const Fix16* sq,
 		else
 		{
 			// Compute intersection t value of ray with near and far plane of slab
-			const Fix16 ood = 1.0f / d[i];
-			Fix16 t1 = (amin[i] - sp[i]) * ood;
-			Fix16 t2 = (amax[i] - sp[i]) * ood;
+			const float ood = 1.0f / d[i];
+			float t1 = (amin[i] - sp[i]) * ood;
+			float t2 = (amax[i] - sp[i]) * ood;
 			// Make t1 be intersection with near plane, t2 with far plane
 			if (t1 > t2) rcSwap(t1, t2);
 			// Compute the intersection of slab intersections intervals
@@ -286,12 +287,12 @@ int Sample_TempObstacles::rasterizeTileLayers(
 	FastLZCompressor comp;
 	RasterizationContext rc;
 	
-	const Fix16* verts = m_geom->getMesh()->getVerts();
+	const float* verts = m_geom->getMesh()->getVerts();
 	const int nverts = m_geom->getMesh()->getVertCount();
 	const rcChunkyTriMesh* chunkyMesh = m_geom->getChunkyMesh();
 	
 	// Tile bounds.
-	const Fix16 tcs = cfg.tileSize * cfg.cs;
+	const float tcs = cfg.tileSize * cfg.cs;
 	
 	rcConfig tcfg;
 	memcpy(&tcfg, &cfg, sizeof(tcfg));
@@ -330,7 +331,7 @@ int Sample_TempObstacles::rasterizeTileLayers(
 		return 0;
 	}
 	
-	Fix16 tbmin[2], tbmax[2];
+	float tbmin[2], tbmax[2];
 	tbmin[0] = tcfg.bmin[0];
 	tbmin[1] = tcfg.bmin[2];
 	tbmax[0] = tcfg.bmax[0];
@@ -459,7 +460,7 @@ int Sample_TempObstacles::rasterizeTileLayers(
 void drawTiles(duDebugDraw* dd, dtTileCache* tc)
 {
 	unsigned int fcol[6];
-	Fix16 bmin[3], bmax[3];
+	float bmin[3], bmax[3];
 
 	for (int i = 0; i < tc->getTileCount(); ++i)
 	{
@@ -481,7 +482,7 @@ void drawTiles(duDebugDraw* dd, dtTileCache* tc)
 		tc->calcTightTileBounds(tile->header, bmin, bmax);
 		
 		const unsigned int col = duIntToCol(i,255);
-		const Fix16 pad = tc->getParams()->cs * 0.1f;
+		const float pad = tc->getParams()->cs * 0.1f;
 		duDebugDrawBoxWire(dd, bmin[0]-pad,bmin[1]-pad,bmin[2]-pad,
 						   bmax[0]+pad,bmax[1]+pad,bmax[2]+pad, col, 2.0f);
 	}
@@ -599,7 +600,7 @@ void drawDetailOverlay(const dtTileCache* tc, const int tx, const int ty, double
 	{
 		const dtCompressedTile* tile = tc->getTileByRef(tiles[i]);
 		
-		Fix16 pos[3];
+		float pos[3];
 		pos[0] = (tile->header->bmin[0]+tile->header->bmax[0])/2.0f;
 		pos[1] = tile->header->bmin[1];
 		pos[2] = (tile->header->bmin[2]+tile->header->bmax[2])/2.0f;
@@ -618,9 +619,9 @@ void drawDetailOverlay(const dtTileCache* tc, const int tx, const int ty, double
 	}
 }
 		
-dtObstacleRef hitTestObstacle(const dtTileCache* tc, const Fix16* sp, const Fix16* sq)
+dtObstacleRef hitTestObstacle(const dtTileCache* tc, const float* sp, const float* sq)
 {
-	Fix16 tmin = FLT_MAX_;
+	float tmin = FLT_MAX;
 	const dtTileCacheObstacle* obmin = 0;
 	for (int i = 0; i < tc->getObstacleCount(); ++i)
 	{
@@ -628,7 +629,7 @@ dtObstacleRef hitTestObstacle(const dtTileCache* tc, const Fix16* sp, const Fix1
 		if (ob->state == DT_OBSTACLE_EMPTY)
 			continue;
 		
-		Fix16 bmin[3], bmax[3], t0,t1;
+		float bmin[3], bmax[3], t0,t1;
 		tc->getObstacleBounds(ob, bmin,bmax);
 		
 		if (isectSegAABB(sp,sq, bmin,bmax, t0,t1))
@@ -650,7 +651,7 @@ void drawObstacles(duDebugDraw* dd, const dtTileCache* tc)
 	{
 		const dtTileCacheObstacle* ob = tc->getObstacle(i);
 		if (ob->state == DT_OBSTACLE_EMPTY) continue;
-		Fix16 bmin[3], bmax[3];
+		float bmin[3], bmax[3];
 		tc->getObstacleBounds(ob, bmin,bmax);
 
 		unsigned int col = 0;
@@ -672,7 +673,7 @@ void drawObstacles(duDebugDraw* dd, const dtTileCache* tc)
 class TempObstacleHilightTool : public SampleTool
 {
 	Sample_TempObstacles* m_sample;
-	Fix16 m_hitPos[3];
+	float m_hitPos[3];
 	bool m_hitPosSet;
 	int m_drawType;
 	
@@ -714,7 +715,7 @@ public:
 			m_drawType = DRAWDETAIL_MESH;
 	}
 
-	virtual void handleClick(const Fix16* /*s*/, const Fix16* p, bool /*shift*/)
+	virtual void handleClick(const float* /*s*/, const float* p, bool /*shift*/)
 	{
 		m_hitPosSet = true;
 		rcVcopy(m_hitPos,p);
@@ -724,13 +725,13 @@ public:
 
 	virtual void handleStep() {}
 
-	virtual void handleUpdate(const Fix16 /*dt*/) {}
+	virtual void handleUpdate(const float /*dt*/) {}
 	
 	virtual void handleRender()
 	{
 		if (m_hitPosSet && m_sample)
 		{
-			const Fix16 s = m_sample->getAgentRadius();
+			const float s = m_sample->getAgentRadius();
 			glColor4ub(0,0,0,128);
 			glLineWidth(2.0f);
 			glBegin(GL_LINES);
@@ -800,7 +801,7 @@ public:
 		imguiValue("Shift+LMB to remove an obstacle.");
 	}
 	
-	virtual void handleClick(const Fix16* s, const Fix16* p, bool shift)
+	virtual void handleClick(const float* s, const float* p, bool shift)
 	{
 		if (m_sample)
 		{
@@ -813,7 +814,7 @@ public:
 	
 	virtual void handleToggle() {}
 	virtual void handleStep() {}
-	virtual void handleUpdate(const Fix16 /*dt*/) {}
+	virtual void handleUpdate(const float /*dt*/) {}
 	virtual void handleRender() {}
 	virtual void handleRenderOverlay(double* /*proj*/, double* /*model*/, int* /*view*/) { }
 };
@@ -864,8 +865,8 @@ void Sample_TempObstacles::handleSettings()
 	int gridSize = 1;
 	if (m_geom)
 	{
-		const Fix16* bmin = m_geom->getNavMeshBoundsMin();
-		const Fix16* bmax = m_geom->getNavMeshBoundsMax();
+		const float* bmin = m_geom->getNavMeshBoundsMin();
+		const float* bmax = m_geom->getNavMeshBoundsMax();
 		char text[64];
 		int gw = 0, gh = 0;
 		rcCalcGridSize(bmin, bmax, m_cellSize, &gw, &gh);
@@ -899,11 +900,11 @@ void Sample_TempObstacles::handleSettings()
 	imguiLabel("Tile Cache");
 	char msg[64];
 
-	const Fix16 compressionRatio = (Fix16)m_cacheCompressedSize / (Fix16)(m_cacheRawSize+1);
+	const float compressionRatio = (float)m_cacheCompressedSize / (float)(m_cacheRawSize+1);
 	
 	snprintf(msg, 64, "Layers  %d", m_cacheLayerCount);
 	imguiValue(msg);
-	snprintf(msg, 64, "Layers (per tile)  %.1f", (Fix16)m_cacheLayerCount/(Fix16)gridSize);
+	snprintf(msg, 64, "Layers (per tile)  %.1f", (float)m_cacheLayerCount/(float)gridSize);
 	imguiValue(msg);
 	
 	snprintf(msg, 64, "Memory  %.1f kB / %.1f kB (%.1f%%)", m_cacheCompressedSize/1024.0f, m_cacheRawSize/1024.0f, compressionRatio*100.0f);
@@ -1033,7 +1034,7 @@ void Sample_TempObstacles::handleRender()
 	if (!m_geom || !m_geom->getMesh())
 		return;
 	
-	const Fix16 texScale = 1.0f / (m_cellSize * 10.0f);
+	const float texScale = 1.0f / (m_cellSize * 10.0f);
 	
 	// Draw mesh
 	if (m_drawMode != DRAWMODE_NAVMESH_TRANS)
@@ -1055,8 +1056,8 @@ void Sample_TempObstacles::handleRender()
 	glDepthMask(GL_FALSE);
 	
 	// Draw bounds
-	const Fix16* bmin = m_geom->getNavMeshBoundsMin();
-	const Fix16* bmax = m_geom->getNavMeshBoundsMax();
+	const float* bmin = m_geom->getNavMeshBoundsMin();
+	const float* bmax = m_geom->getNavMeshBoundsMax();
 	duDebugDrawBoxWire(&m_dd, bmin[0],bmin[1],bmin[2], bmax[0],bmax[1],bmax[2], duRGBA(255,255,255,128), 1.0f);
 	
 	// Tiling grid.
@@ -1064,7 +1065,7 @@ void Sample_TempObstacles::handleRender()
 	rcCalcGridSize(bmin, bmax, m_cellSize, &gw, &gh);
 	const int tw = (gw + (int)m_tileSize-1) / (int)m_tileSize;
 	const int th = (gh + (int)m_tileSize-1) / (int)m_tileSize;
-	const Fix16 s = m_tileSize*m_cellSize;
+	const float s = m_tileSize*m_cellSize;
 	duDebugDrawGridXZ(&m_dd, bmin[0],bmin[1],bmin[2], tw,th, s, duRGBA(0,0,0,64), 1.0f);
 		
 	if (m_navMesh && m_navQuery &&
@@ -1127,7 +1128,7 @@ void Sample_TempObstacles::handleRenderOverlay(double* proj, double* model, int*
 	y -= 20;
 	
 	snprintf(text,64,"Compressed: %.1fkB (%.1f%%)", m_tileCache->getCompressedSize()/1024.0f,
-			 m_tileCache->getRawSize() > 0 ? 100.0f*(Fix16)m_tileCache->getCompressedSize()/(Fix16)m_tileCache->getRawSize() : 0);
+			 m_tileCache->getRawSize() > 0 ? 100.0f*(float)m_tileCache->getCompressedSize()/(float)m_tileCache->getRawSize() : 0);
 	imguiDrawText(300, y, IMGUI_ALIGN_LEFT, text, imguiRGBA(255,255,255,255));
 	y -= 20;
 
@@ -1160,17 +1161,17 @@ void Sample_TempObstacles::handleMeshChanged(class InputGeom* geom)
 	initToolStates(this);
 }
 
-void Sample_TempObstacles::addTempObstacle(const Fix16* pos)
+void Sample_TempObstacles::addTempObstacle(const float* pos)
 {
 	if (!m_tileCache)
 		return;
-	Fix16 p[3];
+	float p[3];
 	dtVcopy(p, pos);
 	p[1] -= 0.5f;
 	m_tileCache->addObstacle(p, 1.0f, 2.0f, 0);
 }
 
-void Sample_TempObstacles::removeTempObstacle(const Fix16* sp, const Fix16* sq)
+void Sample_TempObstacles::removeTempObstacle(const float* sp, const float* sq)
 {
 	if (!m_tileCache)
 		return;
@@ -1203,8 +1204,8 @@ bool Sample_TempObstacles::handleBuild()
 	m_tmproc->init(m_geom);
 	
 	// Init cache
-	const Fix16* bmin = m_geom->getNavMeshBoundsMin();
-	const Fix16* bmax = m_geom->getNavMeshBoundsMax();
+	const float* bmin = m_geom->getNavMeshBoundsMin();
+	const float* bmax = m_geom->getNavMeshBoundsMax();
 	int gw = 0, gh = 0;
 	rcCalcGridSize(bmin, bmax, m_cellSize, &gw, &gh);
 	const int ts = (int)m_tileSize;
@@ -1359,7 +1360,7 @@ bool Sample_TempObstacles::handleBuild()
 	return true;
 }
 
-void Sample_TempObstacles::handleUpdate(const Fix16 dt)
+void Sample_TempObstacles::handleUpdate(const float dt)
 {
 	Sample::handleUpdate(dt);
 	
@@ -1371,13 +1372,13 @@ void Sample_TempObstacles::handleUpdate(const Fix16 dt)
 	m_tileCache->update(dt, m_navMesh);
 }
 
-void Sample_TempObstacles::getTilePos(const Fix16* pos, int& tx, int& ty)
+void Sample_TempObstacles::getTilePos(const float* pos, int& tx, int& ty)
 {
 	if (!m_geom) return;
 	
-	const Fix16* bmin = m_geom->getNavMeshBoundsMin();
+	const float* bmin = m_geom->getNavMeshBoundsMin();
 	
-	const Fix16 ts = m_tileSize*m_cellSize;
+	const float ts = m_tileSize*m_cellSize;
 	tx = (int)((pos[0] - bmin[0]) / ts);
 	ty = (int)((pos[2] - bmin[2]) / ts);
 }

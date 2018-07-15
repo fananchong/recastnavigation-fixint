@@ -75,7 +75,7 @@ inline unsigned int ilog2(unsigned int v)
 class NavMeshTileTool : public SampleTool
 {
 	Sample_TileMesh* m_sample;
-	Fix16 m_hitPos[3];
+	float m_hitPos[3];
 	bool m_hitPosSet;
 	
 public:
@@ -115,7 +115,7 @@ public:
 		}
 	}
 
-	virtual void handleClick(const Fix16* /*s*/, const Fix16* p, bool shift)
+	virtual void handleClick(const float* /*s*/, const float* p, bool shift)
 	{
 		m_hitPosSet = true;
 		rcVcopy(m_hitPos,p);
@@ -132,13 +132,13 @@ public:
 
 	virtual void handleStep() {}
 
-	virtual void handleUpdate(const Fix16 /*dt*/) {}
+	virtual void handleUpdate(const float /*dt*/) {}
 	
 	virtual void handleRender()
 	{
 		if (m_hitPosSet)
 		{
-			const Fix16 s = m_sample->getAgentRadius();
+			const float s = m_sample->getAgentRadius();
 			glColor4ub(0,0,0,128);
 			glLineWidth(2.0f);
 			glBegin(GL_LINES);
@@ -241,8 +241,8 @@ void Sample_TileMesh::handleSettings()
 	{
 		char text[64];
 		int gw = 0, gh = 0;
-		const Fix16* bmin = m_geom->getNavMeshBoundsMin();
-		const Fix16* bmax = m_geom->getNavMeshBoundsMax();
+		const float* bmin = m_geom->getNavMeshBoundsMin();
+		const float* bmax = m_geom->getNavMeshBoundsMax();
 		rcCalcGridSize(bmin, bmax, m_cellSize, &gw, &gh);
 		const int ts = (int)m_tileSize;
 		const int tw = (gw + ts-1) / ts;
@@ -424,7 +424,7 @@ void Sample_TileMesh::handleRender()
 	if (!m_geom || !m_geom->getMesh())
 		return;
 	
-	const Fix16 texScale = 1.0f / (m_cellSize * 10.0f);
+	const float texScale = 1.0f / (m_cellSize * 10.0f);
 	
 	// Draw mesh
 	if (m_drawMode != DRAWMODE_NAVMESH_TRANS)
@@ -439,8 +439,8 @@ void Sample_TileMesh::handleRender()
 	glDepthMask(GL_FALSE);
 	
 	// Draw bounds
-	const Fix16* bmin = m_geom->getNavMeshBoundsMin();
-	const Fix16* bmax = m_geom->getNavMeshBoundsMax();
+	const float* bmin = m_geom->getNavMeshBoundsMin();
+	const float* bmax = m_geom->getNavMeshBoundsMax();
 	duDebugDrawBoxWire(&m_dd, bmin[0],bmin[1],bmin[2], bmax[0],bmax[1],bmax[2], duRGBA(255,255,255,128), 1.0f);
 	
 	// Tiling grid.
@@ -448,7 +448,7 @@ void Sample_TileMesh::handleRender()
 	rcCalcGridSize(bmin, bmax, m_cellSize, &gw, &gh);
 	const int tw = (gw + (int)m_tileSize-1) / (int)m_tileSize;
 	const int th = (gh + (int)m_tileSize-1) / (int)m_tileSize;
-	const Fix16 s = m_tileSize*m_cellSize;
+	const float s = m_tileSize*m_cellSize;
 	duDebugDrawGridXZ(&m_dd, bmin[0],bmin[1],bmin[2], tw,th, s, duRGBA(0,0,0,64), 1.0f);
 	
 	// Draw active tile
@@ -644,15 +644,15 @@ void Sample_TileMesh::collectSettings(BuildSettings& settings)
 	settings.tileSize = m_tileSize;
 }
 
-void Sample_TileMesh::buildTile(const Fix16* pos)
+void Sample_TileMesh::buildTile(const float* pos)
 {
 	if (!m_geom) return;
 	if (!m_navMesh) return;
 		
-	const Fix16* bmin = m_geom->getNavMeshBoundsMin();
-	const Fix16* bmax = m_geom->getNavMeshBoundsMax();
+	const float* bmin = m_geom->getNavMeshBoundsMin();
+	const float* bmax = m_geom->getNavMeshBoundsMax();
 	
-	const Fix16 ts = m_tileSize*m_cellSize;
+	const float ts = m_tileSize*m_cellSize;
 	const int tx = (int)((pos[0] - bmin[0]) / ts);
 	const int ty = (int)((pos[2] - bmin[2]) / ts);
 	
@@ -686,26 +686,26 @@ void Sample_TileMesh::buildTile(const Fix16* pos)
 	m_ctx->dumpLog("Build Tile (%d,%d):", tx,ty);
 }
 
-void Sample_TileMesh::getTilePos(const Fix16* pos, int& tx, int& ty)
+void Sample_TileMesh::getTilePos(const float* pos, int& tx, int& ty)
 {
 	if (!m_geom) return;
 	
-	const Fix16* bmin = m_geom->getNavMeshBoundsMin();
+	const float* bmin = m_geom->getNavMeshBoundsMin();
 	
-	const Fix16 ts = m_tileSize*m_cellSize;
+	const float ts = m_tileSize*m_cellSize;
 	tx = (int)((pos[0] - bmin[0]) / ts);
 	ty = (int)((pos[2] - bmin[2]) / ts);
 }
 
-void Sample_TileMesh::removeTile(const Fix16* pos)
+void Sample_TileMesh::removeTile(const float* pos)
 {
 	if (!m_geom) return;
 	if (!m_navMesh) return;
 	
-	const Fix16* bmin = m_geom->getNavMeshBoundsMin();
-	const Fix16* bmax = m_geom->getNavMeshBoundsMax();
+	const float* bmin = m_geom->getNavMeshBoundsMin();
+	const float* bmax = m_geom->getNavMeshBoundsMax();
 
-	const Fix16 ts = m_tileSize*m_cellSize;
+	const float ts = m_tileSize*m_cellSize;
 	const int tx = (int)((pos[0] - bmin[0]) / ts);
 	const int ty = (int)((pos[2] - bmin[2]) / ts);
 	
@@ -727,14 +727,14 @@ void Sample_TileMesh::buildAllTiles()
 	if (!m_geom) return;
 	if (!m_navMesh) return;
 	
-	const Fix16* bmin = m_geom->getNavMeshBoundsMin();
-	const Fix16* bmax = m_geom->getNavMeshBoundsMax();
+	const float* bmin = m_geom->getNavMeshBoundsMin();
+	const float* bmax = m_geom->getNavMeshBoundsMax();
 	int gw = 0, gh = 0;
 	rcCalcGridSize(bmin, bmax, m_cellSize, &gw, &gh);
 	const int ts = (int)m_tileSize;
 	const int tw = (gw + ts-1) / ts;
 	const int th = (gh + ts-1) / ts;
-	const Fix16 tcs = m_tileSize*m_cellSize;
+	const float tcs = m_tileSize*m_cellSize;
 
 	
 	// Start the build process.
@@ -778,8 +778,8 @@ void Sample_TileMesh::removeAllTiles()
 	if (!m_geom || !m_navMesh)
 		return;
 
-	const Fix16* bmin = m_geom->getNavMeshBoundsMin();
-	const Fix16* bmax = m_geom->getNavMeshBoundsMax();
+	const float* bmin = m_geom->getNavMeshBoundsMin();
+	const float* bmax = m_geom->getNavMeshBoundsMax();
 	int gw = 0, gh = 0;
 	rcCalcGridSize(bmin, bmax, m_cellSize, &gw, &gh);
 	const int ts = (int)m_tileSize;
@@ -792,7 +792,7 @@ void Sample_TileMesh::removeAllTiles()
 }
 
 
-unsigned char* Sample_TileMesh::buildTileMesh(const int tx, const int ty, const Fix16* bmin, const Fix16* bmax, int& dataSize)
+unsigned char* Sample_TileMesh::buildTileMesh(const int tx, const int ty, const float* bmin, const float* bmax, int& dataSize)
 {
 	if (!m_geom || !m_geom->getMesh() || !m_geom->getChunkyMesh())
 	{
@@ -805,7 +805,7 @@ unsigned char* Sample_TileMesh::buildTileMesh(const int tx, const int ty, const 
 	
 	cleanup();
 	
-	const Fix16* verts = m_geom->getMesh()->getVerts();
+	const float* verts = m_geom->getMesh()->getVerts();
 	const int nverts = m_geom->getMesh()->getVertCount();
 	const int ntris = m_geom->getMesh()->getTriCount();
 	const rcChunkyTriMesh* chunkyMesh = m_geom->getChunkyMesh();
@@ -891,7 +891,7 @@ unsigned char* Sample_TileMesh::buildTileMesh(const int tx, const int ty, const 
 		return 0;
 	}
 	
-	Fix16 tbmin[2], tbmax[2];
+	float tbmin[2], tbmax[2];
 	tbmin[0] = m_cfg.bmin[0];
 	tbmin[1] = m_cfg.bmin[2];
 	tbmax[0] = m_cfg.bmax[0];

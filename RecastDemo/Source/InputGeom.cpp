@@ -31,12 +31,12 @@
 #include "DetourNavMesh.h"
 #include "Sample.h"
 
-static bool intersectSegmentTriangle(const Fix16* sp, const Fix16* sq,
-									 const Fix16* a, const Fix16* b, const Fix16* c,
-									 Fix16 &t)
+static bool intersectSegmentTriangle(const float* sp, const float* sq,
+									 const float* a, const float* b, const float* c,
+									 float &t)
 {
-	Fix16 v, w;
-	Fix16 ab[3], ac[3], qp[3], ap[3], norm[3], e[3];
+	float v, w;
+	float ab[3], ac[3], qp[3], ap[3], norm[3], e[3];
 	rcVsub(ab, b, a);
 	rcVsub(ac, c, a);
 	rcVsub(qp, sp, sq);
@@ -47,7 +47,7 @@ static bool intersectSegmentTriangle(const Fix16* sp, const Fix16* sq,
 	
 	// Compute denominator d. If d <= 0, segment is parallel to or points
 	// away from triangle, so exit early
-	Fix16 d = rcVdot(qp, norm);
+	float d = rcVdot(qp, norm);
 	if (d <= 0.0f) return false;
 	
 	// Compute intersection t value of pq with plane of triangle. A ray
@@ -236,9 +236,9 @@ bool InputGeom::loadGeomSet(rcContext* ctx, const std::string& filepath)
 			// Off-mesh connection
 			if (m_offMeshConCount < MAX_OFFMESH_CONNECTIONS)
 			{
-				Fix16* v = &m_offMeshConVerts[m_offMeshConCount*3*2];
+				float* v = &m_offMeshConVerts[m_offMeshConCount*3*2];
 				int bidir, area = 0, flags = 0;
-				Fix16 rad;
+				float rad;
 				sscanf(row+1, "%f %f %f  %f %f %f %f %d %d %d",
 					   &v[0], &v[1], &v[2], &v[3], &v[4], &v[5], &rad, &bidir, &area, &flags);
 				m_offMeshConRads[m_offMeshConCount] = rad;
@@ -363,8 +363,8 @@ bool InputGeom::saveGeomSet(const BuildSettings* settings)
 	// Store off-mesh links.
 	for (int i = 0; i < m_offMeshConCount; ++i)
 	{
-		const Fix16* v = &m_offMeshConVerts[i*3*2];
-		const Fix16 rad = m_offMeshConRads[i];
+		const float* v = &m_offMeshConVerts[i*3*2];
+		const float rad = m_offMeshConRads[i];
 		const int bidir = m_offMeshConDirs[i];
 		const int area = m_offMeshConAreas[i];
 		const int flags = m_offMeshConFlags[i];
@@ -386,13 +386,13 @@ bool InputGeom::saveGeomSet(const BuildSettings* settings)
 	return true;
 }
 
-static bool isectSegAABB(const Fix16* sp, const Fix16* sq,
-						 const Fix16* amin, const Fix16* amax,
-						 Fix16& tmin, Fix16& tmax)
+static bool isectSegAABB(const float* sp, const float* sq,
+						 const float* amin, const float* amax,
+						 float& tmin, float& tmax)
 {
-	static const Fix16 EPS = 1e-6f;
+	static const float EPS = 1e-6f;
 	
-	Fix16 d[3];
+	float d[3];
 	d[0] = sq[0] - sp[0];
 	d[1] = sq[1] - sp[1];
 	d[2] = sq[2] - sp[2];
@@ -408,10 +408,10 @@ static bool isectSegAABB(const Fix16* sp, const Fix16* sq,
 		}
 		else
 		{
-			const Fix16 ood = 1.0f / d[i];
-			Fix16 t1 = (amin[i] - sp[i]) * ood;
-			Fix16 t2 = (amax[i] - sp[i]) * ood;
-			if (t1 > t2) { Fix16 tmp = t1; t1 = t2; t2 = tmp; }
+			const float ood = 1.0f / d[i];
+			float t1 = (amin[i] - sp[i]) * ood;
+			float t2 = (amax[i] - sp[i]) * ood;
+			if (t1 > t2) { float tmp = t1; t1 = t2; t2 = tmp; }
 			if (t1 > tmin) tmin = t1;
 			if (t2 < tmax) tmax = t2;
 			if (tmin > tmax) return false;
@@ -422,16 +422,16 @@ static bool isectSegAABB(const Fix16* sp, const Fix16* sq,
 }
 
 
-bool InputGeom::raycastMesh(Fix16* src, Fix16* dst, Fix16& tmin)
+bool InputGeom::raycastMesh(float* src, float* dst, float& tmin)
 {
-	Fix16 dir[3];
+	float dir[3];
 	rcVsub(dir, dst, src);
 
 	// Prune hit ray.
-	Fix16 btmin, btmax;
+	float btmin, btmax;
 	if (!isectSegAABB(src, dst, m_meshBMin, m_meshBMax, btmin, btmax))
 		return false;
-	Fix16 p[2], q[2];
+	float p[2], q[2];
 	p[0] = src[0] + (dst[0]-src[0])*btmin;
 	p[1] = src[2] + (dst[2]-src[2])*btmin;
 	q[0] = src[0] + (dst[0]-src[0])*btmax;
@@ -444,7 +444,7 @@ bool InputGeom::raycastMesh(Fix16* src, Fix16* dst, Fix16& tmin)
 	
 	tmin = 1.0f;
 	bool hit = false;
-	const Fix16* verts = m_mesh->getVerts();
+	const float* verts = m_mesh->getVerts();
 	
 	for (int i = 0; i < ncid; ++i)
 	{
@@ -454,7 +454,7 @@ bool InputGeom::raycastMesh(Fix16* src, Fix16* dst, Fix16& tmin)
 
 		for (int j = 0; j < ntris*3; j += 3)
 		{
-			Fix16 t = 1;
+			float t = 1;
 			if (intersectSegmentTriangle(src, dst,
 										 &verts[tris[j]*3],
 										 &verts[tris[j+1]*3],
@@ -470,11 +470,11 @@ bool InputGeom::raycastMesh(Fix16* src, Fix16* dst, Fix16& tmin)
 	return hit;
 }
 
-void InputGeom::addOffMeshConnection(const Fix16* spos, const Fix16* epos, const Fix16 rad,
+void InputGeom::addOffMeshConnection(const float* spos, const float* epos, const float rad,
 									 unsigned char bidir, unsigned char area, unsigned short flags)
 {
 	if (m_offMeshConCount >= MAX_OFFMESH_CONNECTIONS) return;
-	Fix16* v = &m_offMeshConVerts[m_offMeshConCount*3*2];
+	float* v = &m_offMeshConVerts[m_offMeshConCount*3*2];
 	m_offMeshConRads[m_offMeshConCount] = rad;
 	m_offMeshConDirs[m_offMeshConCount] = bidir;
 	m_offMeshConAreas[m_offMeshConCount] = area;
@@ -488,8 +488,8 @@ void InputGeom::addOffMeshConnection(const Fix16* spos, const Fix16* epos, const
 void InputGeom::deleteOffMeshConnection(int i)
 {
 	m_offMeshConCount--;
-	Fix16* src = &m_offMeshConVerts[m_offMeshConCount*3*2];
-	Fix16* dst = &m_offMeshConVerts[i*3*2];
+	float* src = &m_offMeshConVerts[m_offMeshConCount*3*2];
+	float* dst = &m_offMeshConVerts[i*3*2];
 	rcVcopy(&dst[0], &src[0]);
 	rcVcopy(&dst[3], &src[3]);
 	m_offMeshConRads[i] = m_offMeshConRads[m_offMeshConCount];
@@ -507,7 +507,7 @@ void InputGeom::drawOffMeshConnections(duDebugDraw* dd, bool hilight)
 	dd->begin(DU_DRAW_LINES, 2.0f);
 	for (int i = 0; i < m_offMeshConCount; ++i)
 	{
-		Fix16* v = &m_offMeshConVerts[i*3*2];
+		float* v = &m_offMeshConVerts[i*3*2];
 
 		dd->vertex(v[0],v[1],v[2], baseColor);
 		dd->vertex(v[0],v[1]+0.2f,v[2], baseColor);
@@ -529,13 +529,13 @@ void InputGeom::drawOffMeshConnections(duDebugDraw* dd, bool hilight)
 	dd->depthMask(true);
 }
 
-void InputGeom::addConvexVolume(const Fix16* verts, const int nverts,
-								const Fix16 minh, const Fix16 maxh, unsigned char area)
+void InputGeom::addConvexVolume(const float* verts, const int nverts,
+								const float minh, const float maxh, unsigned char area)
 {
 	if (m_volumeCount >= MAX_VOLUMES) return;
 	ConvexVolume* vol = &m_volumes[m_volumeCount++];
 	memset(vol, 0, sizeof(ConvexVolume));
-	memcpy(vol->verts, verts, sizeof(Fix16)*3*nverts);
+	memcpy(vol->verts, verts, sizeof(float)*3*nverts);
 	vol->hmin = minh;
 	vol->hmax = maxh;
 	vol->nverts = nverts;
@@ -560,8 +560,8 @@ void InputGeom::drawConvexVolumes(struct duDebugDraw* dd, bool /*hilight*/)
 		unsigned int col = duTransCol(dd->areaToCol(vol->area), 32);
 		for (int j = 0, k = vol->nverts-1; j < vol->nverts; k = j++)
 		{
-			const Fix16* va = &vol->verts[k*3];
-			const Fix16* vb = &vol->verts[j*3];
+			const float* va = &vol->verts[k*3];
+			const float* vb = &vol->verts[j*3];
 
 			dd->vertex(vol->verts[0],vol->hmax,vol->verts[2], col);
 			dd->vertex(vb[0],vol->hmax,vb[2], col);
@@ -586,8 +586,8 @@ void InputGeom::drawConvexVolumes(struct duDebugDraw* dd, bool /*hilight*/)
 		unsigned int col = duTransCol(dd->areaToCol(vol->area), 220);
 		for (int j = 0, k = vol->nverts-1; j < vol->nverts; k = j++)
 		{
-			const Fix16* va = &vol->verts[k*3];
-			const Fix16* vb = &vol->verts[j*3];
+			const float* va = &vol->verts[k*3];
+			const float* vb = &vol->verts[j*3];
 			dd->vertex(va[0],vol->hmin,va[2], duDarkenCol(col));
 			dd->vertex(vb[0],vol->hmin,vb[2], duDarkenCol(col));
 			dd->vertex(va[0],vol->hmax,va[2], col);

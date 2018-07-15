@@ -29,7 +29,7 @@ class NavMeshPruneTool : public SampleTool
 	
 	class NavmeshFlags* m_flags;
 
-	Fix16 m_hitPos[3];
+	float m_hitPos[3];
 	bool m_hitPosSet;
 	
 public:
@@ -40,10 +40,10 @@ public:
 	virtual void init(Sample* sample);
 	virtual void reset();
 	virtual void handleMenu();
-	virtual void handleClick(const Fix16* s, const Fix16* p, bool shift);
+	virtual void handleClick(const float* s, const float* p, bool shift);
 	virtual void handleToggle();
 	virtual void handleStep();
-	virtual void handleUpdate(const Fix16 dt);
+	virtual void handleUpdate(const float dt);
 	virtual void handleRender();
 	virtual void handleRenderOverlay(double* proj, double* model, int* view);
 

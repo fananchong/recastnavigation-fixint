@@ -23,9 +23,7 @@
 #include "RecastAlloc.h"
 #include "RecastAssert.h"
 
-static const Fix16 Fix16_1 = Fix16(1.0f);
-
-inline bool overlapBounds(const Fix16* amin, const Fix16* amax, const Fix16* bmin, const Fix16* bmax)
+inline bool overlapBounds(const float* amin, const float* amax, const float* bmin, const float* bmax)
 {
 	bool overlap = true;
 	overlap = (amin[0] > bmax[0] || amax[0] < bmin[0]) ? false : overlap;
@@ -183,12 +181,12 @@ bool rcAddSpan(rcContext* ctx, rcHeightfield& hf, const int x, const int y,
 }
 
 // divides a convex polygons into two convex polygons on both sides of a line
-static void dividePoly(const Fix16* in, int nin,
-					  Fix16* out1, int* nout1,
-					  Fix16* out2, int* nout2,
-					  Fix16 x, int axis)
+static void dividePoly(const float* in, int nin,
+					  float* out1, int* nout1,
+					  float* out2, int* nout2,
+					  float x, int axis)
 {
-	Fix16 d[12];
+	float d[12];
 	for (int i = 0; i < nin; ++i)
 		d[i] = x - in[i*3+axis];
 
@@ -199,7 +197,7 @@ static void dividePoly(const Fix16* in, int nin,
 		bool inb = d[i] >= 0;
 		if (ina != inb)
 		{
-			Fix16 s = d[j] / (d[j] - d[i]);
+			float s = d[j] / (d[j] - d[i]);
 			out1[m*3+0] = in[j*3+0] + (in[i*3+0] - in[j*3+0])*s;
 			out1[m*3+1] = in[j*3+1] + (in[i*3+1] - in[j*3+1])*s;
 			out1[m*3+2] = in[j*3+2] + (in[i*3+2] - in[j*3+2])*s;
@@ -240,16 +238,16 @@ static void dividePoly(const Fix16* in, int nin,
 
 
 
-static bool rasterizeTri(const Fix16* v0, const Fix16* v1, const Fix16* v2,
+static bool rasterizeTri(const float* v0, const float* v1, const float* v2,
 						 const unsigned char area, rcHeightfield& hf,
-						 const Fix16* bmin, const Fix16* bmax,
-						 const Fix16 cs, const Fix16 ics, const Fix16 ich,
+						 const float* bmin, const float* bmax,
+						 const float cs, const float ics, const float ich,
 						 const int flagMergeThr)
 {
 	const int w = hf.width;
 	const int h = hf.height;
-	Fix16 tmin[3], tmax[3];
-	const Fix16 by = bmax[1] - bmin[1];
+	float tmin[3], tmax[3];
+	const float by = bmax[1] - bmin[1];
 	
 	// Calculate the bounding box of the triangle.
 	rcVcopy(tmin, v0);
@@ -270,8 +268,8 @@ static bool rasterizeTri(const Fix16* v0, const Fix16* v1, const Fix16* v2,
 	y1 = rcClamp(y1, 0, h-1);
 	
 	// Clip the triangle into all grid cells it touches.
-	Fix16 buf[7*3*4];
-	Fix16 *in = buf, *inrow = buf+7*3, *p1 = inrow+7*3, *p2 = p1+7*3;
+	float buf[7*3*4];
+	float *in = buf, *inrow = buf+7*3, *p1 = inrow+7*3, *p2 = p1+7*3;
 
 	rcVcopy(&in[0], v0);
 	rcVcopy(&in[1*3], v1);
@@ -281,13 +279,13 @@ static bool rasterizeTri(const Fix16* v0, const Fix16* v1, const Fix16* v2,
 	for (int y = y0; y <= y1; ++y)
 	{
 		// Clip polygon to row. Store the remaining polygon as well
-		const Fix16 cz = bmin[2] + Fix16(y)*cs;
+		const float cz = bmin[2] + y*cs;
 		dividePoly(in, nvIn, inrow, &nvrow, p1, &nvIn, cz+cs, 2);
 		rcSwap(in, p1);
 		if (nvrow < 3) continue;
 		
 		// find the horizontal bounds in the row
-		Fix16 minX = inrow[0], maxX = inrow[0];
+		float minX = inrow[0], maxX = inrow[0];
 		for (int i=1; i<nvrow; ++i)
 		{
 			if (minX > inrow[i*3])	minX = inrow[i*3];
@@ -303,13 +301,13 @@ static bool rasterizeTri(const Fix16* v0, const Fix16* v1, const Fix16* v2,
 		for (int x = x0; x <= x1; ++x)
 		{
 			// Clip polygon to column. store the remaining polygon as well
-			const Fix16 cx = bmin[0] + Fix16(x)*cs;
+			const float cx = bmin[0] + x*cs;
 			dividePoly(inrow, nv2, p1, &nv, p2, &nv2, cx+cs, 0);
 			rcSwap(inrow, p2);
 			if (nv < 3) continue;
 			
 			// Calculate min and max of the span.
-			Fix16 smin = p1[1], smax = p1[1];
+			float smin = p1[1], smax = p1[1];
 			for (int i = 1; i < nv; ++i)
 			{
 				smin = rcMin(smin, p1[i*3+1]);
@@ -341,7 +339,7 @@ static bool rasterizeTri(const Fix16* v0, const Fix16* v1, const Fix16* v2,
 /// No spans will be added if the triangle does not overlap the heightfield grid.
 ///
 /// @see rcHeightfield
-bool rcRasterizeTriangle(rcContext* ctx, const Fix16* v0, const Fix16* v1, const Fix16* v2,
+bool rcRasterizeTriangle(rcContext* ctx, const float* v0, const float* v1, const float* v2,
 						 const unsigned char area, rcHeightfield& solid,
 						 const int flagMergeThr)
 {
@@ -349,8 +347,8 @@ bool rcRasterizeTriangle(rcContext* ctx, const Fix16* v0, const Fix16* v1, const
 
 	rcScopedTimer timer(ctx, RC_TIMER_RASTERIZE_TRIANGLES);
 
-	const Fix16 ics = Fix16_1/solid.cs;
-	const Fix16 ich = Fix16_1/solid.ch;
+	const float ics = 1.0f/solid.cs;
+	const float ich = 1.0f/solid.ch;
 	if (!rasterizeTri(v0, v1, v2, area, solid, solid.bmin, solid.bmax, solid.cs, ics, ich, flagMergeThr))
 	{
 		ctx->log(RC_LOG_ERROR, "rcRasterizeTriangle: Out of memory.");
@@ -365,7 +363,7 @@ bool rcRasterizeTriangle(rcContext* ctx, const Fix16* v0, const Fix16* v1, const
 /// Spans will only be added for triangles that overlap the heightfield grid.
 ///
 /// @see rcHeightfield
-bool rcRasterizeTriangles(rcContext* ctx, const Fix16* verts, const int /*nv*/,
+bool rcRasterizeTriangles(rcContext* ctx, const float* verts, const int /*nv*/,
 						  const int* tris, const unsigned char* areas, const int nt,
 						  rcHeightfield& solid, const int flagMergeThr)
 {
@@ -373,14 +371,14 @@ bool rcRasterizeTriangles(rcContext* ctx, const Fix16* verts, const int /*nv*/,
 
 	rcScopedTimer timer(ctx, RC_TIMER_RASTERIZE_TRIANGLES);
 	
-	const Fix16 ics = Fix16_1/solid.cs;
-	const Fix16 ich = Fix16_1/solid.ch;
+	const float ics = 1.0f/solid.cs;
+	const float ich = 1.0f/solid.ch;
 	// Rasterize triangles.
 	for (int i = 0; i < nt; ++i)
 	{
-		const Fix16* v0 = &verts[tris[i*3+0]*3];
-		const Fix16* v1 = &verts[tris[i*3+1]*3];
-		const Fix16* v2 = &verts[tris[i*3+2]*3];
+		const float* v0 = &verts[tris[i*3+0]*3];
+		const float* v1 = &verts[tris[i*3+1]*3];
+		const float* v2 = &verts[tris[i*3+2]*3];
 		// Rasterize.
 		if (!rasterizeTri(v0, v1, v2, areas[i], solid, solid.bmin, solid.bmax, solid.cs, ics, ich, flagMergeThr))
 		{
@@ -397,7 +395,7 @@ bool rcRasterizeTriangles(rcContext* ctx, const Fix16* verts, const int /*nv*/,
 /// Spans will only be added for triangles that overlap the heightfield grid.
 ///
 /// @see rcHeightfield
-bool rcRasterizeTriangles(rcContext* ctx, const Fix16* verts, const int /*nv*/,
+bool rcRasterizeTriangles(rcContext* ctx, const float* verts, const int /*nv*/,
 						  const unsigned short* tris, const unsigned char* areas, const int nt,
 						  rcHeightfield& solid, const int flagMergeThr)
 {
@@ -405,14 +403,14 @@ bool rcRasterizeTriangles(rcContext* ctx, const Fix16* verts, const int /*nv*/,
 
 	rcScopedTimer timer(ctx, RC_TIMER_RASTERIZE_TRIANGLES);
 	
-	const Fix16 ics = Fix16_1/solid.cs;
-	const Fix16 ich = Fix16_1/solid.ch;
+	const float ics = 1.0f/solid.cs;
+	const float ich = 1.0f/solid.ch;
 	// Rasterize triangles.
 	for (int i = 0; i < nt; ++i)
 	{
-		const Fix16* v0 = &verts[tris[i*3+0]*3];
-		const Fix16* v1 = &verts[tris[i*3+1]*3];
-		const Fix16* v2 = &verts[tris[i*3+2]*3];
+		const float* v0 = &verts[tris[i*3+0]*3];
+		const float* v1 = &verts[tris[i*3+1]*3];
+		const float* v2 = &verts[tris[i*3+2]*3];
 		// Rasterize.
 		if (!rasterizeTri(v0, v1, v2, areas[i], solid, solid.bmin, solid.bmax, solid.cs, ics, ich, flagMergeThr))
 		{
@@ -429,21 +427,21 @@ bool rcRasterizeTriangles(rcContext* ctx, const Fix16* verts, const int /*nv*/,
 /// Spans will only be added for triangles that overlap the heightfield grid.
 ///
 /// @see rcHeightfield
-bool rcRasterizeTriangles(rcContext* ctx, const Fix16* verts, const unsigned char* areas, const int nt,
+bool rcRasterizeTriangles(rcContext* ctx, const float* verts, const unsigned char* areas, const int nt,
 						  rcHeightfield& solid, const int flagMergeThr)
 {
 	rcAssert(ctx);
 	
 	rcScopedTimer timer(ctx, RC_TIMER_RASTERIZE_TRIANGLES);
 	
-	const Fix16 ics = Fix16_1/solid.cs;
-	const Fix16 ich = Fix16_1/solid.ch;
+	const float ics = 1.0f/solid.cs;
+	const float ich = 1.0f/solid.ch;
 	// Rasterize triangles.
 	for (int i = 0; i < nt; ++i)
 	{
-		const Fix16* v0 = &verts[(i*3+0)*3];
-		const Fix16* v1 = &verts[(i*3+1)*3];
-		const Fix16* v2 = &verts[(i*3+2)*3];
+		const float* v0 = &verts[(i*3+0)*3];
+		const float* v1 = &verts[(i*3+1)*3];
+		const float* v2 = &verts[(i*3+2)*3];
 		// Rasterize.
 		if (!rasterizeTri(v0, v1, v2, areas[i], solid, solid.bmin, solid.bmax, solid.cs, ics, ich, flagMergeThr))
 		{

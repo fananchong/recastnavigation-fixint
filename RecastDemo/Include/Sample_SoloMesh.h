@@ -27,7 +27,7 @@ class Sample_SoloMesh : public Sample
 {
 protected:
 	bool m_keepInterResults;
-	Fix16 m_totalBuildTimeMs;
+	float m_totalBuildTimeMs;
 
 	unsigned char* m_triareas;
 	rcHeightfield* m_solid;

@@ -20,6 +20,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <float.h>
 #include "SDL.h"
 #include "SDL_opengl.h"
 #include "imgui.h"
@@ -37,17 +38,17 @@
 // Quick and dirty convex hull.
 
 // Returns true if 'c' is left of line 'a'-'b'.
-inline bool left(const Fix16* a, const Fix16* b, const Fix16* c)
+inline bool left(const float* a, const float* b, const float* c)
 { 
-	const Fix16 u1 = b[0] - a[0];
-	const Fix16 v1 = b[2] - a[2];
-	const Fix16 u2 = c[0] - a[0];
-	const Fix16 v2 = c[2] - a[2];
+	const float u1 = b[0] - a[0];
+	const float v1 = b[2] - a[2];
+	const float u2 = c[0] - a[0];
+	const float v2 = c[2] - a[2];
 	return u1 * v2 - v1 * u2 < 0;
 }
 
 // Returns true if 'a' is more lower-left than 'b'.
-inline bool cmppt(const Fix16* a, const Fix16* b)
+inline bool cmppt(const float* a, const float* b)
 {
 	if (a[0] < b[0]) return true;
 	if (a[0] > b[0]) return false;
@@ -58,7 +59,7 @@ inline bool cmppt(const Fix16* a, const Fix16* b)
 // Calculates convex hull on xz-plane of points on 'pts',
 // stores the indices of the resulting hull in 'out' and
 // returns number of points on hull.
-static int convexhull(const Fix16* pts, int npts, int* out)
+static int convexhull(const float* pts, int npts, int* out)
 {
 	// Find lower-leftmost point.
 	int hull = 0;
@@ -82,13 +83,13 @@ static int convexhull(const Fix16* pts, int npts, int* out)
 	return i;
 }
 
-static int pointInPoly(int nvert, const Fix16* verts, const Fix16* p)
+static int pointInPoly(int nvert, const float* verts, const float* p)
 {
 	int i, j, c = 0;
 	for (i = 0, j = nvert-1; i < nvert; j = i++)
 	{
-		const Fix16* vi = &verts[i*3];
-		const Fix16* vj = &verts[j*3];
+		const float* vi = &verts[i*3];
+		const float* vj = &verts[j*3];
 		if (((vi[2] > p[2]) != (vj[2] > p[2])) &&
 			(p[0] < (vj[0]-vi[0]) * (p[2]-vi[2]) / (vj[2]-vi[2]) + vi[0]) )
 			c = !c;
@@ -152,7 +153,7 @@ void ConvexVolumeTool::handleMenu()
 	}
 }
 
-void ConvexVolumeTool::handleClick(const Fix16* /*s*/, const Fix16* p, bool shift)
+void ConvexVolumeTool::handleClick(const float* /*s*/, const float* p, bool shift)
 {
 	if (!m_sample) return;
 	InputGeom* geom = m_sample->getInputGeom();
@@ -187,11 +188,11 @@ void ConvexVolumeTool::handleClick(const Fix16* /*s*/, const Fix16* p, bool shif
 			if (m_nhull > 2)
 			{
 				// Create shape.
-				Fix16 verts[MAX_PTS*3];
+				float verts[MAX_PTS*3];
 				for (int i = 0; i < m_nhull; ++i)
 					rcVcopy(&verts[i*3], &m_pts[m_hull[i]*3]);
 					
-				Fix16 minh = FLT_MAX, maxh = 0;
+				float minh = FLT_MAX, maxh = 0;
 				for (int i = 0; i < m_nhull; ++i)
 					minh = rcMin(minh, verts[i*3+1]);
 				minh -= m_boxDescent;
@@ -199,7 +200,7 @@ void ConvexVolumeTool::handleClick(const Fix16* /*s*/, const Fix16* p, bool shif
 
 				if (m_polyOffset > 0.01f)
 				{
-					Fix16 offset[MAX_PTS*2*3];
+					float offset[MAX_PTS*2*3];
 					int noffset = rcOffsetPoly(verts, m_nhull, m_polyOffset, offset, MAX_PTS*2);
 					if (noffset > 0)
 						geom->addConvexVolume(offset, noffset, minh, maxh, (unsigned char)m_areaType);
@@ -239,7 +240,7 @@ void ConvexVolumeTool::handleStep()
 {
 }
 
-void ConvexVolumeTool::handleUpdate(const Fix16 /*dt*/)
+void ConvexVolumeTool::handleUpdate(const float /*dt*/)
 {
 }
 
@@ -248,7 +249,7 @@ void ConvexVolumeTool::handleRender()
 	duDebugDraw& dd = m_sample->getDebugDraw();
 	
 	// Find height extent of the shape.
-	Fix16 minh = FLT_MAX, maxh = 0;
+	float minh = FLT_MAX, maxh = 0;
 	for (int i = 0; i < m_npts; ++i)
 		minh = rcMin(minh, m_pts[i*3+1]);
 	minh -= m_boxDescent;
@@ -267,8 +268,8 @@ void ConvexVolumeTool::handleRender()
 	dd.begin(DU_DRAW_LINES, 2.0f);
 	for (int i = 0, j = m_nhull-1; i < m_nhull; j = i++)
 	{
-		const Fix16* vi = &m_pts[m_hull[j]*3];
-		const Fix16* vj = &m_pts[m_hull[i]*3];
+		const float* vi = &m_pts[m_hull[j]*3];
+		const float* vj = &m_pts[m_hull[i]*3];
 		dd.vertex(vj[0],minh,vj[2], duRGBA(255,255,255,64));
 		dd.vertex(vi[0],minh,vi[2], duRGBA(255,255,255,64));
 		dd.vertex(vj[0],maxh,vj[2], duRGBA(255,255,255,64));

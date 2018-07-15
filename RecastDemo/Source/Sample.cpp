@@ -115,8 +115,8 @@ void Sample::handleRender()
 	duDebugDrawTriMesh(&m_dd, m_geom->getMesh()->getVerts(), m_geom->getMesh()->getVertCount(),
 					   m_geom->getMesh()->getTris(), m_geom->getMesh()->getNormals(), m_geom->getMesh()->getTriCount(), 0, 1.0f);
 	// Draw bounds
-	const Fix16* bmin = m_geom->getMeshBoundsMin();
-	const Fix16* bmax = m_geom->getMeshBoundsMax();
+	const float* bmin = m_geom->getMeshBoundsMin();
+	const float* bmax = m_geom->getMeshBoundsMax();
 	duDebugDrawBoxWire(&m_dd, bmin[0],bmin[1],bmin[2], bmax[0],bmax[1],bmax[2], duRGBA(255,255,255,128), 1.0f);
 }
 
@@ -193,8 +193,8 @@ void Sample::handleCommonSettings()
 	
 	if (m_geom)
 	{
-		const Fix16* bmin = m_geom->getNavMeshBoundsMin();
-		const Fix16* bmax = m_geom->getNavMeshBoundsMax();
+		const float* bmin = m_geom->getNavMeshBoundsMin();
+		const float* bmax = m_geom->getNavMeshBoundsMax();
 		int gw = 0, gh = 0;
 		rcCalcGridSize(bmin, bmax, m_cellSize, &gw, &gh);
 		char text[64];
@@ -246,7 +246,7 @@ void Sample::handleCommonSettings()
 	imguiSeparator();
 }
 
-void Sample::handleClick(const Fix16* s, const Fix16* p, bool shift)
+void Sample::handleClick(const float* s, const float* p, bool shift)
 {
 	if (m_tool)
 		m_tool->handleClick(s, p, shift);
@@ -269,7 +269,7 @@ bool Sample::handleBuild()
 	return true;
 }
 
-void Sample::handleUpdate(const Fix16 dt)
+void Sample::handleUpdate(const float dt)
 {
 	if (m_tool)
 		m_tool->handleUpdate(dt);
@@ -277,7 +277,7 @@ void Sample::handleUpdate(const Fix16 dt)
 }
 
 
-void Sample::updateToolStates(const Fix16 dt)
+void Sample::updateToolStates(const float dt)
 {
 	for (int i = 0; i < MAX_TOOLS; i++)
 	{

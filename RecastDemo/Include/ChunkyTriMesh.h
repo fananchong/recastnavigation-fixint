@@ -19,12 +19,10 @@
 #ifndef CHUNKYTRIMESH_H
 #define CHUNKYTRIMESH_H
 
-#include <fix16.hpp>
-
 struct rcChunkyTriMeshNode
 {
-	Fix16 bmin[2];
-	Fix16 bmax[2];
+	float bmin[2];
+	float bmax[2];
 	int i;
 	int n;
 };
@@ -48,14 +46,14 @@ private:
 
 /// Creates partitioned triangle mesh (AABB tree),
 /// where each node contains at max trisPerChunk triangles.
-bool rcCreateChunkyTriMesh(const Fix16* verts, const int* tris, int ntris,
+bool rcCreateChunkyTriMesh(const float* verts, const int* tris, int ntris,
 						   int trisPerChunk, rcChunkyTriMesh* cm);
 
 /// Returns the chunk indices which overlap the input rectable.
-int rcGetChunksOverlappingRect(const rcChunkyTriMesh* cm, Fix16 bmin[2], Fix16 bmax[2], int* ids, const int maxIds);
+int rcGetChunksOverlappingRect(const rcChunkyTriMesh* cm, float bmin[2], float bmax[2], int* ids, const int maxIds);
 
 /// Returns the chunk indices which overlap the input segment.
-int rcGetChunksOverlappingSegment(const rcChunkyTriMesh* cm, Fix16 p[2], Fix16 q[2], int* ids, const int maxIds);
+int rcGetChunksOverlappingSegment(const rcChunkyTriMesh* cm, float p[2], float q[2], int* ids, const int maxIds);
 
 
 #endif // CHUNKYTRIMESH_H

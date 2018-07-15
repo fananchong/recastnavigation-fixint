@@ -19,7 +19,6 @@
 #ifndef MESHLOADER_OBJ
 #define MESHLOADER_OBJ
 
-#include <fix16.hpp>
 #include <string>
 
 class rcMeshLoaderObj
@@ -30,8 +29,8 @@ public:
 	
 	bool load(const std::string& fileName);
 
-	const Fix16* getVerts() const { return m_verts; }
-	const Fix16* getNormals() const { return m_normals; }
+	const float* getVerts() const { return m_verts; }
+	const float* getNormals() const { return m_normals; }
 	const int* getTris() const { return m_tris; }
 	int getVertCount() const { return m_vertCount; }
 	int getTriCount() const { return m_triCount; }
@@ -42,14 +41,14 @@ private:
 	rcMeshLoaderObj(const rcMeshLoaderObj&);
 	rcMeshLoaderObj& operator=(const rcMeshLoaderObj&);
 	
-	void addVertex(Fix16 x, Fix16 y, Fix16 z, int& cap);
+	void addVertex(float x, float y, float z, int& cap);
 	void addTriangle(int a, int b, int c, int& cap);
 	
 	std::string m_filename;
-	Fix16 m_scale;	
-	Fix16* m_verts;
+	float m_scale;	
+	float* m_verts;
 	int* m_tris;
-	Fix16* m_normals;
+	float* m_normals;
 	int m_vertCount;
 	int m_triCount;
 };

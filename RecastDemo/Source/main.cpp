@@ -108,7 +108,7 @@ int main(int /*argc*/, char** /*argv*/)
 	}
 	else
 	{
-		Fix16 aspect = 16.0f / 9.0f;
+		float aspect = 16.0f / 9.0f;
 		width = rcMin(displayMode.w, (int)(displayMode.h * aspect)) - 80;
 		height = displayMode.h - 80;
 	}
@@ -133,24 +133,24 @@ int main(int /*argc*/, char** /*argv*/)
 		return -1;
 	}
 	
-	Fix16 t = 0.0f;
-	Fix16 timeAcc = 0.0f;
+	float t = 0.0f;
+	float timeAcc = 0.0f;
 	Uint32 prevFrameTime = SDL_GetTicks();
 	int mousePos[2] = {0, 0};
 	int origMousePos[2] = {0, 0}; // Used to compute mouse movement totals across frames.
 	
-	Fix16 cameraEulers[] = {45, -45};
-	Fix16 cameraPos[] = {0, 0, 0};
-	Fix16 camr = 1000;
-	Fix16 origCameraEulers[] = {0, 0}; // Used to compute rotational changes across frames.
+	float cameraEulers[] = {45, -45};
+	float cameraPos[] = {0, 0, 0};
+	float camr = 1000;
+	float origCameraEulers[] = {0, 0}; // Used to compute rotational changes across frames.
 	
-	Fix16 moveFront = 0.0f, moveBack = 0.0f, moveLeft = 0.0f, moveRight = 0.0f, moveUp = 0.0f, moveDown = 0.0f;
+	float moveFront = 0.0f, moveBack = 0.0f, moveLeft = 0.0f, moveRight = 0.0f, moveUp = 0.0f, moveDown = 0.0f;
 	
-	Fix16 scrollZoom = 0;
+	float scrollZoom = 0;
 	bool rotate = false;
 	bool movedDuringRotate = false;
-	Fix16 rayStart[3];
-	Fix16 rayEnd[3];
+	float rayStart[3];
+	float rayEnd[3];
 	bool mouseOverMenu = false;
 	
 	bool showMenu = !presentationMode;
@@ -171,7 +171,7 @@ int main(int /*argc*/, char** /*argv*/)
 	const string meshesFolder = "Meshes";
 	string meshName = "Choose Mesh...";
 	
-	Fix16 markerPosition[3] = {0, 0, 0};
+	float markerPosition[3] = {0, 0, 0};
 	bool markerPositionSet = false;
 	
 	InputGeom* geom = 0;
@@ -183,7 +183,7 @@ int main(int /*argc*/, char** /*argv*/)
 	BuildContext ctx;
 	
 	// Fog.
-	Fix16 fogColor[4] = { 0.32f, 0.31f, 0.30f, 1.0f };
+	float fogColor[4] = { 0.32f, 0.31f, 0.30f, 1.0f };
 	glEnable(GL_FOG);
 	glFogi(GL_FOG_MODE, GL_LINEAR);
 	glFogf(GL_FOG_START, camr * 0.1f);
@@ -350,7 +350,7 @@ int main(int /*argc*/, char** /*argv*/)
 			mouseButtonMask |= IMGUI_MBUT_RIGHT;
 		
 		Uint32 time = SDL_GetTicks();
-		Fix16 dt = (time - prevFrameTime) / 1000.0f;
+		float dt = (time - prevFrameTime) / 1000.0f;
 		prevFrameTime = time;
 		
 		t += dt;
@@ -358,7 +358,7 @@ int main(int /*argc*/, char** /*argv*/)
 		// Hit test mesh.
 		if (processHitTest && geom && sample)
 		{
-			Fix16 hitTime;
+			float hitTime;
 			bool hit = geom->raycastMesh(rayStart, rayEnd, hitTime);
 			
 			if (hit)
@@ -373,7 +373,7 @@ int main(int /*argc*/, char** /*argv*/)
 				}
 				else
 				{
-					Fix16 pos[3];
+					float pos[3];
 					pos[0] = rayStart[0] + (rayEnd[0] - rayStart[0]) * hitTime;
 					pos[1] = rayStart[1] + (rayEnd[1] - rayStart[1]) * hitTime;
 					pos[2] = rayStart[2] + (rayEnd[2] - rayStart[2]) * hitTime;
@@ -391,8 +391,8 @@ int main(int /*argc*/, char** /*argv*/)
 		}
 		
 		// Update sample simulation.
-		const Fix16 SIM_RATE = 20;
-		const Fix16 DELTA_TIME = 1.0f / SIM_RATE;
+		const float SIM_RATE = 20;
+		const float DELTA_TIME = 1.0f / SIM_RATE;
 		timeAcc = rcClamp(timeAcc + dt, -1.0f, 1.0f);
 		int simIter = 0;
 		while (timeAcc > DELTA_TIME)
@@ -406,7 +406,7 @@ int main(int /*argc*/, char** /*argv*/)
 		}
 
 		// Clamp the framerate so that we do not hog all the CPU.
-		const Fix16 MIN_FRAME_TIME = 1.0f / 40.0f;
+		const float MIN_FRAME_TIME = 1.0f / 40.0f;
 		if (dt < MIN_FRAME_TIME)
 		{
 			int ms = (int)((MIN_FRAME_TIME - dt) * 1000.0f);
@@ -430,7 +430,7 @@ int main(int /*argc*/, char** /*argv*/)
 		// Compute the projection matrix.
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
-		gluPerspective(50.0f, (Fix16)width/(Fix16)height, 1.0f, camr);
+		gluPerspective(50.0f, (float)width/(float)height, 1.0f, camr);
 		GLdouble projectionMatrix[16];
 		glGetDoublev(GL_PROJECTION_MATRIX, projectionMatrix);
 		
@@ -446,13 +446,13 @@ int main(int /*argc*/, char** /*argv*/)
 		// Get hit ray position and direction.
 		GLdouble x, y, z;
 		gluUnProject(mousePos[0], mousePos[1], 0.0f, modelviewMatrix, projectionMatrix, viewport, &x, &y, &z);
-		rayStart[0] = (Fix16)x;
-		rayStart[1] = (Fix16)y;
-		rayStart[2] = (Fix16)z;
+		rayStart[0] = (float)x;
+		rayStart[1] = (float)y;
+		rayStart[2] = (float)z;
 		gluUnProject(mousePos[0], mousePos[1], 1.0f, modelviewMatrix, projectionMatrix, viewport, &x, &y, &z);
-		rayEnd[0] = (Fix16)x;
-		rayEnd[1] = (Fix16)y;
-		rayEnd[2] = (Fix16)z;
+		rayEnd[0] = (float)x;
+		rayEnd[1] = (float)y;
+		rayEnd[2] = (float)z;
 		
 		// Handle keyboard movement.
 		const Uint8* keystate = SDL_GetKeyboardState(NULL);
@@ -463,23 +463,23 @@ int main(int /*argc*/, char** /*argv*/)
 		moveUp		= rcClamp(moveUp	+ dt * 4 * ((keystate[SDL_SCANCODE_Q] || keystate[SDL_SCANCODE_PAGEUP	]) ? 1 : -1), 0.0f, 1.0f);
 		moveDown	= rcClamp(moveDown	+ dt * 4 * ((keystate[SDL_SCANCODE_E] || keystate[SDL_SCANCODE_PAGEDOWN	]) ? 1 : -1), 0.0f, 1.0f);
 		
-		Fix16 keybSpeed = 22.0f;
+		float keybSpeed = 22.0f;
 		if (SDL_GetModState() & KMOD_SHIFT)
 		{
 			keybSpeed *= 4.0f;
 		}
 		
-		Fix16 movex = (moveRight - moveLeft) * keybSpeed * dt;
-		Fix16 movey = (moveBack - moveFront) * keybSpeed * dt + scrollZoom * 2.0f;
+		float movex = (moveRight - moveLeft) * keybSpeed * dt;
+		float movey = (moveBack - moveFront) * keybSpeed * dt + scrollZoom * 2.0f;
 		scrollZoom = 0;
 		
-		cameraPos[0] += movex * (Fix16)modelviewMatrix[0];
-		cameraPos[1] += movex * (Fix16)modelviewMatrix[4];
-		cameraPos[2] += movex * (Fix16)modelviewMatrix[8];
+		cameraPos[0] += movex * (float)modelviewMatrix[0];
+		cameraPos[1] += movex * (float)modelviewMatrix[4];
+		cameraPos[2] += movex * (float)modelviewMatrix[8];
 		
-		cameraPos[0] += movey * (Fix16)modelviewMatrix[2];
-		cameraPos[1] += movey * (Fix16)modelviewMatrix[6];
-		cameraPos[2] += movey * (Fix16)modelviewMatrix[10];
+		cameraPos[0] += movey * (float)modelviewMatrix[2];
+		cameraPos[1] += movey * (float)modelviewMatrix[6];
+		cameraPos[2] += movey * (float)modelviewMatrix[10];
 
 		cameraPos[1] += (moveUp - moveDown) * keybSpeed * dt;
 
@@ -638,8 +638,8 @@ int main(int /*argc*/, char** /*argv*/)
 
 			if (geom || sample)
 			{
-				const Fix16* bmin = 0;
-				const Fix16* bmax = 0;
+				const float* bmin = 0;
+				const float* bmax = 0;
 				if (geom)
 				{
 					bmin = geom->getNavMeshBoundsMin();
@@ -717,8 +717,8 @@ int main(int /*argc*/, char** /*argv*/)
 
 				if (geom || sample)
 				{
-					const Fix16* bmin = 0;
-					const Fix16* bmax = 0;
+					const float* bmin = 0;
+					const float* bmax = 0;
 					if (geom)
 					{
 						bmin = geom->getNavMeshBoundsMin();
@@ -833,8 +833,8 @@ int main(int /*argc*/, char** /*argv*/)
 					
 					if (geom || sample)
 					{
-						const Fix16* bmin = 0;
-						const Fix16* bmax = 0;
+						const float* bmin = 0;
+						const float* bmax = 0;
 						if (geom)
 						{
 							bmin = geom->getNavMeshBoundsMin();
@@ -897,12 +897,12 @@ int main(int /*argc*/, char** /*argv*/)
 			glLineWidth(5.0f);
 			glColor4ub(240,220,0,196);
 			glBegin(GL_LINE_LOOP);
-			const Fix16 r = 25.0f;
+			const float r = 25.0f;
 			for (int i = 0; i < 20; ++i)
 			{
-				const Fix16 a = (Fix16)i / 20.0f * RC_PI*2;
-				const Fix16 fx = (Fix16)x + cosf(a)*r;
-				const Fix16 fy = (Fix16)y + sinf(a)*r;
+				const float a = (float)i / 20.0f * RC_PI*2;
+				const float fx = (float)x + cosf(a)*r;
+				const float fy = (float)y + sinf(a)*r;
 				glVertex2f(fx,fy);
 			}
 			glEnd();

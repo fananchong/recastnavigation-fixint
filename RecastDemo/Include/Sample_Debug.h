@@ -31,9 +31,9 @@ protected:
 	rcContourSet* m_cset;
 	rcPolyMesh* m_pmesh;
 
-	Fix16 m_halfExtents[3];
-	Fix16 m_center[3];
-	Fix16 m_bmin[3], m_bmax[3];
+	float m_halfExtents[3];
+	float m_center[3];
+	float m_bmin[3], m_bmax[3];
 	dtPolyRef m_ref;
 	
 public:
@@ -43,15 +43,15 @@ public:
 	virtual void handleSettings();
 	virtual void handleTools();
 	virtual void handleDebugMode();
-	virtual void handleClick(const Fix16* s, const Fix16* p, bool shift);
+	virtual void handleClick(const float* s, const float* p, bool shift);
 	virtual void handleToggle();
 	virtual void handleRender();
 	virtual void handleRenderOverlay(double* proj, double* model, int* view);
 	virtual void handleMeshChanged(class InputGeom* geom);
 	virtual bool handleBuild();
 
-	virtual const Fix16* getBoundsMin();
-	virtual const Fix16* getBoundsMax();
+	virtual const float* getBoundsMin();
+	virtual const float* getBoundsMax();
 
 private:
 	// Explicitly disabled copy constructor and copy assignment operator.

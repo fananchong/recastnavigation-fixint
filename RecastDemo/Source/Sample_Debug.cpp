@@ -94,7 +94,7 @@ Sample_Debug::Sample_Debug() :
 	}*/
 	
 
-/*	const Fix16 orig[3] = {0,0,0};
+/*	const float orig[3] = {0,0,0};
 	m_navMesh = new dtNavMesh;
 	m_navMesh->init(orig, 133.333f,133.333f, 2048, 4096, 4096);
 
@@ -124,8 +124,8 @@ Sample_Debug::Sample_Debug() :
 		m_navMesh->addTileAt(-14,-14, data, dataSize, true);
 	}
 	
-	const Fix16 halfExtents[3] = {40,100,40};
-	const Fix16 center[3] = { -1667.9491f, 135.52649f, -1680.6149f };
+	const float halfExtents[3] = {40,100,40};
+	const float center[3] = { -1667.9491f, 135.52649f, -1680.6149f };
 	dtQueryFilter filter;
 	m_ref = m_navMesh->findNearestPoly(center, halfExtents, &filter, 0);
 
@@ -203,7 +203,7 @@ void Sample_Debug::handleRender()
 	if (m_ref && m_navMesh)
 		duDebugDrawNavMeshPoly(&m_dd, *m_navMesh, m_ref, duRGBA(255,0,0,128));
 
-/*	Fix16 bmin[3], bmax[3];
+/*	float bmin[3], bmax[3];
 	rcVsub(bmin, m_center, m_halfExtents);
 	rcVadd(bmax, m_center, m_halfExtents);
 	duDebugDrawBoxWire(&dd, bmin[0],bmin[1],bmin[2], bmax[0],bmax[1],bmax[2], duRGBA(255,255,255,128), 1.0f);
@@ -223,9 +223,9 @@ void Sample_Debug::handleRender()
 	/*
 	dd.depthMask(false);
 	{
-		const Fix16 bmin[3] = {-32.000004f,-11.488281f,-115.343544f};
-		const Fix16 cs = 0.300000f;
-		const Fix16 ch = 0.200000f;
+		const float bmin[3] = {-32.000004f,-11.488281f,-115.343544f};
+		const float cs = 0.300000f;
+		const float ch = 0.200000f;
 		const int verts[] = {
 			158,46,336,0,
 			157,47,331,0,
@@ -327,7 +327,7 @@ void Sample_Debug::handleMeshChanged(InputGeom* geom)
 	m_geom = geom;
 }
 
-const Fix16* Sample_Debug::getBoundsMin()
+const float* Sample_Debug::getBoundsMin()
 {
 	if (m_cset)
 		return m_cset->bmin;
@@ -338,7 +338,7 @@ const Fix16* Sample_Debug::getBoundsMin()
 	return 0;
 }
 
-const Fix16* Sample_Debug::getBoundsMax()
+const float* Sample_Debug::getBoundsMax()
 {
 	if (m_cset)
 		return m_cset->bmax;
@@ -349,7 +349,7 @@ const Fix16* Sample_Debug::getBoundsMax()
 	return 0;
 }
 
-void Sample_Debug::handleClick(const Fix16* s, const Fix16* p, bool shift)
+void Sample_Debug::handleClick(const float* s, const float* p, bool shift)
 {
 	if (m_tool)
 		m_tool->handleClick(s, p, shift);

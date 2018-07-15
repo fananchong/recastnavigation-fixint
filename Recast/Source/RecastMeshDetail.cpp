@@ -16,6 +16,7 @@
 // 3. This notice may not be removed or altered from any source distribution.
 //
 
+#include <float.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <string.h>
@@ -25,9 +26,6 @@
 #include "RecastAlloc.h"
 #include "RecastAssert.h"
 
-static const Fix16 FLT_MAX = fix16_maximum;
-static const Fix16 Fix16_0 = Fix16(0);
-static const Fix16 Fix16_1 = Fix16(1.0f);
 
 static const unsigned RC_UNSET_HEIGHT = 0xffff;
 
@@ -40,51 +38,51 @@ struct rcHeightPatch
 };
 
 
-inline Fix16 vdot2(const Fix16* a, const Fix16* b)
+inline float vdot2(const float* a, const float* b)
 {
 	return a[0]*b[0] + a[2]*b[2];
 }
 
-inline Fix16 vdistSq2(const Fix16* p, const Fix16* q)
+inline float vdistSq2(const float* p, const float* q)
 {
-	const Fix16 dx = q[0] - p[0];
-	const Fix16 dy = q[2] - p[2];
+	const float dx = q[0] - p[0];
+	const float dy = q[2] - p[2];
 	return dx*dx + dy*dy;
 }
 
-inline Fix16 vdist2(const Fix16* p, const Fix16* q)
+inline float vdist2(const float* p, const float* q)
 {
 	return sqrtf(vdistSq2(p,q));
 }
 
-inline Fix16 vcross2(const Fix16* p1, const Fix16* p2, const Fix16* p3)
+inline float vcross2(const float* p1, const float* p2, const float* p3)
 {
-	const Fix16 u1 = p2[0] - p1[0];
-	const Fix16 v1 = p2[2] - p1[2];
-	const Fix16 u2 = p3[0] - p1[0];
-	const Fix16 v2 = p3[2] - p1[2];
+	const float u1 = p2[0] - p1[0];
+	const float v1 = p2[2] - p1[2];
+	const float u2 = p3[0] - p1[0];
+	const float v2 = p3[2] - p1[2];
 	return u1 * v2 - v1 * u2;
 }
 
-static bool circumCircle(const Fix16* p1, const Fix16* p2, const Fix16* p3,
-						 Fix16* c, Fix16& r)
+static bool circumCircle(const float* p1, const float* p2, const float* p3,
+						 float* c, float& r)
 {
-	static const Fix16 EPS = 1e-6f;
+	static const float EPS = 1e-6f;
 	// Calculate the circle relative to p1, to avoid some precision issues.
-	const Fix16 v1[3] = {0,0,0};
-	Fix16 v2[3], v3[3];
+	const float v1[3] = {0,0,0};
+	float v2[3], v3[3];
 	rcVsub(v2, p2,p1);
 	rcVsub(v3, p3,p1);
 	
-	const Fix16 cp = vcross2(v1, v2, v3);
-	if (Fix16(fabsf(cp)) > EPS)
+	const float cp = vcross2(v1, v2, v3);
+	if (fabsf(cp) > EPS)
 	{
-		const Fix16 v1Sq = vdot2(v1,v1);
-		const Fix16 v2Sq = vdot2(v2,v2);
-		const Fix16 v3Sq = vdot2(v3,v3);
-		c[0] = (v1Sq*(v2[2]-v3[2]) + v2Sq*(v3[2]-v1[2]) + v3Sq*(v1[2]-v2[2])) / (Fix16(2)*cp);
+		const float v1Sq = vdot2(v1,v1);
+		const float v2Sq = vdot2(v2,v2);
+		const float v3Sq = vdot2(v3,v3);
+		c[0] = (v1Sq*(v2[2]-v3[2]) + v2Sq*(v3[2]-v1[2]) + v3Sq*(v1[2]-v2[2])) / (2*cp);
 		c[1] = 0;
-		c[2] = (v1Sq*(v3[0]-v2[0]) + v2Sq*(v1[0]-v3[0]) + v3Sq*(v2[0]-v1[0])) / (Fix16(2)*cp);
+		c[2] = (v1Sq*(v3[0]-v2[0]) + v2Sq*(v1[0]-v3[0]) + v3Sq*(v2[0]-v1[0])) / (2*cp);
 		r = vdist2(c, v1);
 		rcVadd(c, c, p1);
 		return true;
@@ -95,45 +93,44 @@ static bool circumCircle(const Fix16* p1, const Fix16* p2, const Fix16* p3,
 	return false;
 }
 
-static Fix16 distPtTri(const Fix16* p, const Fix16* a, const Fix16* b, const Fix16* c)
+static float distPtTri(const float* p, const float* a, const float* b, const float* c)
 {
-	Fix16 v0[3], v1[3], v2[3];
+	float v0[3], v1[3], v2[3];
 	rcVsub(v0, c,a);
 	rcVsub(v1, b,a);
 	rcVsub(v2, p,a);
 	
-	const Fix16 dot00 = vdot2(v0, v0);
-	const Fix16 dot01 = vdot2(v0, v1);
-	const Fix16 dot02 = vdot2(v0, v2);
-	const Fix16 dot11 = vdot2(v1, v1);
-	const Fix16 dot12 = vdot2(v1, v2);
+	const float dot00 = vdot2(v0, v0);
+	const float dot01 = vdot2(v0, v1);
+	const float dot02 = vdot2(v0, v2);
+	const float dot11 = vdot2(v1, v1);
+	const float dot12 = vdot2(v1, v2);
 	
 	// Compute barycentric coordinates
-	const Fix16 invDenom = Fix16_1 / (dot00 * dot11 - dot01 * dot01);
-	const Fix16 u = (dot11 * dot02 - dot01 * dot12) * invDenom;
-	Fix16 v = (dot00 * dot12 - dot01 * dot02) * invDenom;
+	const float invDenom = 1.0f / (dot00 * dot11 - dot01 * dot01);
+	const float u = (dot11 * dot02 - dot01 * dot12) * invDenom;
+	float v = (dot00 * dot12 - dot01 * dot02) * invDenom;
 	
 	// If point lies inside the triangle, return interpolated y-coord.
-	static const Fix16 EPS = 1e-4f;
-    static const Fix16 NEGATIVE_EPS = -(1e-4f);
-	if (u >= NEGATIVE_EPS && v >= NEGATIVE_EPS && (u+v) <= Fix16_1+EPS)
+	static const float EPS = 1e-4f;
+	if (u >= -EPS && v >= -EPS && (u+v) <= 1+EPS)
 	{
-		const Fix16 y = a[1] + v0[1]*u + v1[1]*v;
+		const float y = a[1] + v0[1]*u + v1[1]*v;
 		return fabsf(y-p[1]);
 	}
 	return FLT_MAX;
 }
 
-static Fix16 distancePtSeg(const Fix16* pt, const Fix16* p, const Fix16* q)
+static float distancePtSeg(const float* pt, const float* p, const float* q)
 {
-	Fix16 pqx = q[0] - p[0];
-	Fix16 pqy = q[1] - p[1];
-	Fix16 pqz = q[2] - p[2];
-	Fix16 dx = pt[0] - p[0];
-	Fix16 dy = pt[1] - p[1];
-	Fix16 dz = pt[2] - p[2];
-	Fix16 d = pqx*pqx + pqy*pqy + pqz*pqz;
-	Fix16 t = pqx*dx + pqy*dy + pqz*dz;
+	float pqx = q[0] - p[0];
+	float pqy = q[1] - p[1];
+	float pqz = q[2] - p[2];
+	float dx = pt[0] - p[0];
+	float dy = pt[1] - p[1];
+	float dz = pt[2] - p[2];
+	float d = pqx*pqx + pqy*pqy + pqz*pqz;
+	float t = pqx*dx + pqy*dy + pqz*dz;
 	if (d > 0)
 		t /= d;
 	if (t < 0)
@@ -148,14 +145,14 @@ static Fix16 distancePtSeg(const Fix16* pt, const Fix16* p, const Fix16* q)
 	return dx*dx + dy*dy + dz*dz;
 }
 
-static Fix16 distancePtSeg2d(const Fix16* pt, const Fix16* p, const Fix16* q)
+static float distancePtSeg2d(const float* pt, const float* p, const float* q)
 {
-	Fix16 pqx = q[0] - p[0];
-	Fix16 pqz = q[2] - p[2];
-	Fix16 dx = pt[0] - p[0];
-	Fix16 dz = pt[2] - p[2];
-	Fix16 d = pqx*pqx + pqz*pqz;
-	Fix16 t = pqx*dx + pqz*dz;
+	float pqx = q[0] - p[0];
+	float pqz = q[2] - p[2];
+	float dx = pt[0] - p[0];
+	float dz = pt[2] - p[2];
+	float d = pqx*pqx + pqz*pqz;
+	float t = pqx*dx + pqz*dz;
 	if (d > 0)
 		t /= d;
 	if (t < 0)
@@ -169,15 +166,15 @@ static Fix16 distancePtSeg2d(const Fix16* pt, const Fix16* p, const Fix16* q)
 	return dx*dx + dz*dz;
 }
 
-static Fix16 distToTriMesh(const Fix16* p, const Fix16* verts, const int /*nverts*/, const int* tris, const int ntris)
+static float distToTriMesh(const float* p, const float* verts, const int /*nverts*/, const int* tris, const int ntris)
 {
-	Fix16 dmin = FLT_MAX;
+	float dmin = FLT_MAX;
 	for (int i = 0; i < ntris; ++i)
 	{
-		const Fix16* va = &verts[tris[i*4+0]*3];
-		const Fix16* vb = &verts[tris[i*4+1]*3];
-		const Fix16* vc = &verts[tris[i*4+2]*3];
-		Fix16 d = distPtTri(p, va,vb,vc);
+		const float* va = &verts[tris[i*4+0]*3];
+		const float* vb = &verts[tris[i*4+1]*3];
+		const float* vc = &verts[tris[i*4+2]*3];
+		float d = distPtTri(p, va,vb,vc);
 		if (d < dmin)
 			dmin = d;
 	}
@@ -185,26 +182,26 @@ static Fix16 distToTriMesh(const Fix16* p, const Fix16* verts, const int /*nvert
 	return dmin;
 }
 
-static Fix16 distToPoly(int nvert, const Fix16* verts, const Fix16* p)
+static float distToPoly(int nvert, const float* verts, const float* p)
 {
 	
-	Fix16 dmin = FLT_MAX;
+	float dmin = FLT_MAX;
 	int i, j, c = 0;
 	for (i = 0, j = nvert-1; i < nvert; j = i++)
 	{
-		const Fix16* vi = &verts[i*3];
-		const Fix16* vj = &verts[j*3];
+		const float* vi = &verts[i*3];
+		const float* vj = &verts[j*3];
 		if (((vi[2] > p[2]) != (vj[2] > p[2])) &&
 			(p[0] < (vj[0]-vi[0]) * (p[2]-vi[2]) / (vj[2]-vi[2]) + vi[0]) )
 			c = !c;
 		dmin = rcMin(dmin, distancePtSeg2d(p, vj, vi));
 	}
-	return c ? Fix16_0-dmin : dmin;
+	return c ? -dmin : dmin;
 }
 
 
-static unsigned short getHeight(const Fix16 fx, const Fix16 fy, const Fix16 fz,
-								const Fix16 /*cs*/, const Fix16 ics, const Fix16 ch,
+static unsigned short getHeight(const float fx, const float fy, const float fz,
+								const float /*cs*/, const float ics, const float ch,
 								const int radius, const rcHeightPatch& hp)
 {
 	int ix = (int)floorf(fx*ics + 0.01f);
@@ -224,7 +221,7 @@ static unsigned short getHeight(const Fix16 fx, const Fix16 fy, const Fix16 fz,
 		int nextRingIterStart = 8;
 		int nextRingIters = 16;
 
-		Fix16 dmin = FLT_MAX;
+		float dmin = FLT_MAX;
 		for (int i = 0; i < maxIter; i++)
 		{
 			const int nx = ix + x;
@@ -235,7 +232,7 @@ static unsigned short getHeight(const Fix16 fx, const Fix16 fy, const Fix16 fz,
 				const unsigned short nh = hp.data[nx + nz*hp.width];
 				if (nh != RC_UNSET_HEIGHT)
 				{
-					const Fix16 d = fabsf(Fix16(nh)*ch - fy);
+					const float d = fabsf(nh*ch - fy);
 					if (d < dmin)
 					{
 						h = nh;
@@ -334,21 +331,21 @@ static void updateLeftFace(int* e, int s, int t, int f)
 		e[3] = f;
 }
 
-static int overlapSegSeg2d(const Fix16* a, const Fix16* b, const Fix16* c, const Fix16* d)
+static int overlapSegSeg2d(const float* a, const float* b, const float* c, const float* d)
 {
-	const Fix16 a1 = vcross2(a, b, d);
-	const Fix16 a2 = vcross2(a, b, c);
+	const float a1 = vcross2(a, b, d);
+	const float a2 = vcross2(a, b, c);
 	if (a1*a2 < 0.0f)
 	{
-		Fix16 a3 = vcross2(c, d, a);
-		Fix16 a4 = a3 + a2 - a1;
+		float a3 = vcross2(c, d, a);
+		float a4 = a3 + a2 - a1;
 		if (a3 * a4 < 0.0f)
 			return 1;
 	}
 	return 0;
 }
 
-static bool overlapEdges(const Fix16* pts, const int* edges, int nedges, int s1, int t1)
+static bool overlapEdges(const float* pts, const int* edges, int nedges, int s1, int t1)
 {
 	for (int i = 0; i < nedges; ++i)
 	{
@@ -363,9 +360,9 @@ static bool overlapEdges(const Fix16* pts, const int* edges, int nedges, int s1,
 	return false;
 }
 
-static void completeFacet(rcContext* ctx, const Fix16* pts, int npts, int* edges, int& nedges, const int maxEdges, int& nfaces, int e)
+static void completeFacet(rcContext* ctx, const float* pts, int npts, int* edges, int& nedges, const int maxEdges, int& nfaces, int e)
 {
-	static const Fix16 EPS = 1e-5f;
+	static const float EPS = 1e-5f;
 	
 	int* edge = &edges[e*4];
 	
@@ -389,8 +386,8 @@ static void completeFacet(rcContext* ctx, const Fix16* pts, int npts, int* edges
     
 	// Find best point on left of edge.
 	int pt = npts;
-	Fix16 c[3] = {0,0,0};
-	Fix16 r = -1;
+	float c[3] = {0,0,0};
+	float r = -1;
 	for (int u = 0; u < npts; ++u)
 	{
 		if (u == s || u == t) continue;
@@ -403,14 +400,14 @@ static void completeFacet(rcContext* ctx, const Fix16* pts, int npts, int* edges
 				circumCircle(&pts[s*3], &pts[t*3], &pts[u*3], c, r);
 				continue;
 			}
-			const Fix16 d = vdist2(c, &pts[u*3]);
-			const Fix16 tol = 0.001f;
-			if (d > r*(Fix16_1+tol))
+			const float d = vdist2(c, &pts[u*3]);
+			const float tol = 0.001f;
+			if (d > r*(1+tol))
 			{
 				// Outside current circumcircle, skip.
 				continue;
 			}
-			else if (d < r*(Fix16_1-tol))
+			else if (d < r*(1-tol))
 			{
 				// Inside safe circumcircle, update circle.
 				pt = u;
@@ -459,7 +456,7 @@ static void completeFacet(rcContext* ctx, const Fix16* pts, int npts, int* edges
 	}
 }
 
-static void delaunayHull(rcContext* ctx, const int npts, const Fix16* pts,
+static void delaunayHull(rcContext* ctx, const int npts, const float* pts,
 						 const int nhull, const int* hull,
 						 rcIntArray& tris, rcIntArray& edges)
 {
@@ -536,19 +533,19 @@ static void delaunayHull(rcContext* ctx, const int npts, const Fix16* pts,
 }
 
 // Calculate minimum extend of the polygon.
-static Fix16 polyMinExtent(const Fix16* verts, const int nverts)
+static float polyMinExtent(const float* verts, const int nverts)
 {
-	Fix16 minDist = FLT_MAX;
+	float minDist = FLT_MAX;
 	for (int i = 0; i < nverts; i++)
 	{
 		const int ni = (i+1) % nverts;
-		const Fix16* p1 = &verts[i*3];
-		const Fix16* p2 = &verts[ni*3];
-		Fix16 maxEdgeDist = 0;
+		const float* p1 = &verts[i*3];
+		const float* p2 = &verts[ni*3];
+		float maxEdgeDist = 0;
 		for (int j = 0; j < nverts; j++)
 		{
 			if (j == i || j == ni) continue;
-			Fix16 d = distancePtSeg2d(&verts[j*3], p1,p2);
+			float d = distancePtSeg2d(&verts[j*3], p1,p2);
 			maxEdgeDist = rcMax(maxEdgeDist, d);
 		}
 		minDist = rcMin(minDist, maxEdgeDist);
@@ -560,21 +557,21 @@ static Fix16 polyMinExtent(const Fix16* verts, const int nverts)
 inline int prev(int i, int n) { return i-1 >= 0 ? i-1 : n-1; }
 inline int next(int i, int n) { return i+1 < n ? i+1 : 0; }
 
-static void triangulateHull(const int /*nverts*/, const Fix16* verts, const int nhull, const int* hull, rcIntArray& tris)
+static void triangulateHull(const int /*nverts*/, const float* verts, const int nhull, const int* hull, rcIntArray& tris)
 {
 	int start = 0, left = 1, right = nhull-1;
 	
 	// Start from an ear with shortest perimeter.
 	// This tends to favor well formed triangles as starting point.
-	Fix16 dmin = 0;
+	float dmin = 0;
 	for (int i = 0; i < nhull; i++)
 	{
 		int pi = prev(i, nhull);
 		int ni = next(i, nhull);
-		const Fix16* pv = &verts[hull[pi]*3];
-		const Fix16* cv = &verts[hull[i]*3];
-		const Fix16* nv = &verts[hull[ni]*3];
-		const Fix16 d = vdist2(pv,cv) + vdist2(cv,nv) + vdist2(nv,pv);
+		const float* pv = &verts[hull[pi]*3];
+		const float* cv = &verts[hull[i]*3];
+		const float* nv = &verts[hull[ni]*3];
+		const float d = vdist2(pv,cv) + vdist2(cv,nv) + vdist2(nv,pv);
 		if (d < dmin)
 		{
 			start = i;
@@ -600,12 +597,12 @@ static void triangulateHull(const int /*nverts*/, const Fix16* verts, const int 
 		int nleft = next(left, nhull);
 		int nright = prev(right, nhull);
 		
-		const Fix16* cvleft = &verts[hull[left]*3];
-		const Fix16* nvleft = &verts[hull[nleft]*3];
-		const Fix16* cvright = &verts[hull[right]*3];
-		const Fix16* nvright = &verts[hull[nright]*3];
-		const Fix16 dleft = vdist2(cvleft, nvleft) + vdist2(nvleft, cvright);
-		const Fix16 dright = vdist2(cvright, nvright) + vdist2(cvleft, nvright);
+		const float* cvleft = &verts[hull[left]*3];
+		const float* nvleft = &verts[hull[nleft]*3];
+		const float* cvright = &verts[hull[right]*3];
+		const float* nvright = &verts[hull[nright]*3];
+		const float dleft = vdist2(cvleft, nvleft) + vdist2(nvleft, cvright);
+		const float dright = vdist2(cvright, nvright) + vdist2(cvleft, nvright);
 		
 		if (dleft < dright)
 		{
@@ -627,26 +624,26 @@ static void triangulateHull(const int /*nverts*/, const Fix16* verts, const int 
 }
 
 
-inline Fix16 getJitterX(const int i)
+inline float getJitterX(const int i)
 {
 	return (((i * 0x8da6b343) & 0xffff) / 65535.0f * 2.0f) - 1.0f;
 }
 
-inline Fix16 getJitterY(const int i)
+inline float getJitterY(const int i)
 {
 	return (((i * 0xd8163841) & 0xffff) / 65535.0f * 2.0f) - 1.0f;
 }
 
-static bool buildPolyDetail(rcContext* ctx, const Fix16* in, const int nin,
-							const Fix16 sampleDist, const Fix16 sampleMaxError,
+static bool buildPolyDetail(rcContext* ctx, const float* in, const int nin,
+							const float sampleDist, const float sampleMaxError,
 							const int heightSearchRadius, const rcCompactHeightfield& chf,
-							const rcHeightPatch& hp, Fix16* verts, int& nverts,
+							const rcHeightPatch& hp, float* verts, int& nverts,
 							rcIntArray& tris, rcIntArray& edges, rcIntArray& samples)
 {
 	static const int MAX_VERTS = 127;
 	static const int MAX_TRIS = 255;	// Max tris for delaunay is 2n-2-k (n=num verts, k=num hull verts).
 	static const int MAX_VERTS_PER_EDGE = 32;
-	Fix16 edge[(MAX_VERTS_PER_EDGE+1)*3];
+	float edge[(MAX_VERTS_PER_EDGE+1)*3];
 	int hull[MAX_VERTS];
 	int nhull = 0;
 	
@@ -658,11 +655,11 @@ static bool buildPolyDetail(rcContext* ctx, const Fix16* in, const int nin,
 	edges.resize(0);
 	tris.resize(0);
 	
-	const Fix16 cs = chf.cs;
-	const Fix16 ics = Fix16_1/cs;
+	const float cs = chf.cs;
+	const float ics = 1.0f/cs;
 	
 	// Calculate minimum extents of the polygon based on input data.
-	Fix16 minExtent = polyMinExtent(verts, nverts);
+	float minExtent = polyMinExtent(verts, nverts);
 	
 	// Tessellate outlines.
 	// This is done in separate pass in order to ensure
@@ -671,8 +668,8 @@ static bool buildPolyDetail(rcContext* ctx, const Fix16* in, const int nin,
 	{
 		for (int i = 0, j = nin-1; i < nin; j=i++)
 		{
-			const Fix16* vj = &in[j*3];
-			const Fix16* vi = &in[i*3];
+			const float* vj = &in[j*3];
+			const float* vi = &in[i*3];
 			bool swapped = false;
 			// Make sure the segments are always handled in same order
 			// using lexological sort or else there will be seams.
@@ -693,10 +690,10 @@ static bool buildPolyDetail(rcContext* ctx, const Fix16* in, const int nin,
 				}
 			}
 			// Create samples along the edge.
-			Fix16 dx = vi[0] - vj[0];
-			Fix16 dy = vi[1] - vj[1];
-			Fix16 dz = vi[2] - vj[2];
-			Fix16 d = sqrtf(dx*dx + dz*dz);
+			float dx = vi[0] - vj[0];
+			float dy = vi[1] - vj[1];
+			float dz = vi[2] - vj[2];
+			float d = sqrtf(dx*dx + dz*dz);
 			int nn = 1 + (int)floorf(d/sampleDist);
 			if (nn >= MAX_VERTS_PER_EDGE) nn = MAX_VERTS_PER_EDGE-1;
 			if (nverts+nn >= MAX_VERTS)
@@ -704,12 +701,12 @@ static bool buildPolyDetail(rcContext* ctx, const Fix16* in, const int nin,
 			
 			for (int k = 0; k <= nn; ++k)
 			{
-				Fix16 u = (Fix16)k/(Fix16)nn;
-				Fix16* pos = &edge[k*3];
+				float u = (float)k/(float)nn;
+				float* pos = &edge[k*3];
 				pos[0] = vj[0] + dx*u;
 				pos[1] = vj[1] + dy*u;
 				pos[2] = vj[2] + dz*u;
-				pos[1] = Fix16(getHeight(pos[0],pos[1],pos[2], cs, ics, chf.ch, heightSearchRadius, hp))*chf.ch;
+				pos[1] = getHeight(pos[0],pos[1],pos[2], cs, ics, chf.ch, heightSearchRadius, hp)*chf.ch;
 			}
 			// Simplify samples.
 			int idx[MAX_VERTS_PER_EDGE] = {0,nn};
@@ -718,14 +715,14 @@ static bool buildPolyDetail(rcContext* ctx, const Fix16* in, const int nin,
 			{
 				const int a = idx[k];
 				const int b = idx[k+1];
-				const Fix16* va = &edge[a*3];
-				const Fix16* vb = &edge[b*3];
+				const float* va = &edge[a*3];
+				const float* vb = &edge[b*3];
 				// Find maximum deviation along the segment.
-				Fix16 maxd = 0;
+				float maxd = 0;
 				int maxi = -1;
 				for (int m = a+1; m < b; ++m)
 				{
-					Fix16 dev = distancePtSeg(&edge[m*3],va,vb);
+					float dev = distancePtSeg(&edge[m*3],va,vb);
 					if (dev > maxd)
 					{
 						maxd = dev;
@@ -793,7 +790,7 @@ static bool buildPolyDetail(rcContext* ctx, const Fix16* in, const int nin,
 	if (sampleDist > 0)
 	{
 		// Create sample locations in a grid.
-		Fix16 bmin[3], bmax[3];
+		float bmin[3], bmax[3];
 		rcVcopy(bmin, in);
 		rcVcopy(bmax, in);
 		for (int i = 1; i < nin; ++i)
@@ -810,12 +807,12 @@ static bool buildPolyDetail(rcContext* ctx, const Fix16* in, const int nin,
 		{
 			for (int x = x0; x < x1; ++x)
 			{
-				Fix16 pt[3];
-				pt[0] = Fix16(x)*sampleDist;
+				float pt[3];
+				pt[0] = x*sampleDist;
 				pt[1] = (bmax[1]+bmin[1])*0.5f;
-				pt[2] = Fix16(z)*sampleDist;
+				pt[2] = z*sampleDist;
 				// Make sure the samples are not too close to the edges.
-				if (distToPoly(nin,in,pt) > Fix16_0-sampleDist/2) continue;
+				if (distToPoly(nin,in,pt) > -sampleDist/2) continue;
 				samples.push(x);
 				samples.push(getHeight(pt[0], pt[1], pt[2], cs, ics, chf.ch, heightSearchRadius, hp));
 				samples.push(z);
@@ -833,20 +830,20 @@ static bool buildPolyDetail(rcContext* ctx, const Fix16* in, const int nin,
 				break;
 			
 			// Find sample with most error.
-			Fix16 bestpt[3] = {0,0,0};
-			Fix16 bestd = 0;
+			float bestpt[3] = {0,0,0};
+			float bestd = 0;
 			int besti = -1;
 			for (int i = 0; i < nsamples; ++i)
 			{
 				const int* s = &samples[i*4];
 				if (s[3]) continue; // skip added.
-				Fix16 pt[3];
+				float pt[3];
 				// The sample location is jittered to get rid of some bad triangulations
 				// which are cause by symmetrical data from the grid structure.
-				pt[0] = Fix16(s[0])*sampleDist + getJitterX(i)*cs*0.1f;
-				pt[1] = Fix16(s[1])*chf.ch;
-				pt[2] = Fix16(s[2])*sampleDist + getJitterY(i)*cs*0.1f;
-				Fix16 d = distToTriMesh(pt, verts, nverts, &tris[0], tris.size()/4);
+				pt[0] = s[0]*sampleDist + getJitterX(i)*cs*0.1f;
+				pt[1] = s[1]*chf.ch;
+				pt[2] = s[2]*sampleDist + getJitterY(i)*cs*0.1f;
+				float d = distToTriMesh(pt, verts, nverts, &tris[0], tris.size()/4);
 				if (d < 0) continue; // did not hit the mesh.
 				if (d > bestd)
 				{
@@ -1140,11 +1137,11 @@ static void getHeightData(rcContext* ctx, const rcCompactHeightfield& chf,
 	}
 }
 
-static unsigned char getEdgeFlags(const Fix16* va, const Fix16* vb,
-								  const Fix16* vpoly, const int npoly)
+static unsigned char getEdgeFlags(const float* va, const float* vb,
+								  const float* vpoly, const int npoly)
 {
 	// Return true if edge (va,vb) is part of the polygon.
-	static const Fix16 thrSqr = rcSqr(0.001f);
+	static const float thrSqr = rcSqr(0.001f);
 	for (int i = 0, j = npoly-1; i < npoly; j=i++)
 	{
 		if (distancePtSeg2d(va, &vpoly[j*3], &vpoly[i*3]) < thrSqr &&
@@ -1154,8 +1151,8 @@ static unsigned char getEdgeFlags(const Fix16* va, const Fix16* vb,
 	return 0;
 }
 
-static unsigned char getTriFlags(const Fix16* va, const Fix16* vb, const Fix16* vc,
-								 const Fix16* vpoly, const int npoly)
+static unsigned char getTriFlags(const float* va, const float* vb, const float* vc,
+								 const float* vpoly, const int npoly)
 {
 	unsigned char flags = 0;
 	flags |= getEdgeFlags(va,vb,vpoly,npoly) << 0;
@@ -1170,7 +1167,7 @@ static unsigned char getTriFlags(const Fix16* va, const Fix16* vb, const Fix16* 
 ///
 /// @see rcAllocPolyMeshDetail, rcPolyMesh, rcCompactHeightfield, rcPolyMeshDetail, rcConfig
 bool rcBuildPolyMeshDetail(rcContext* ctx, const rcPolyMesh& mesh, const rcCompactHeightfield& chf,
-						   const Fix16 sampleDist, const Fix16 sampleMaxError,
+						   const float sampleDist, const float sampleMaxError,
 						   rcPolyMeshDetail& dmesh)
 {
 	rcAssert(ctx);
@@ -1181,9 +1178,9 @@ bool rcBuildPolyMeshDetail(rcContext* ctx, const rcPolyMesh& mesh, const rcCompa
 		return true;
 	
 	const int nvp = mesh.nvp;
-	const Fix16 cs = mesh.cs;
-	const Fix16 ch = mesh.ch;
-	const Fix16* orig = mesh.bmin;
+	const float cs = mesh.cs;
+	const float ch = mesh.ch;
+	const float* orig = mesh.bmin;
 	const int borderSize = mesh.borderSize;
 	const int heightSearchRadius = rcMax(1, (int)ceilf(mesh.maxEdgeError));
 	
@@ -1191,7 +1188,7 @@ bool rcBuildPolyMeshDetail(rcContext* ctx, const rcPolyMesh& mesh, const rcCompa
 	rcIntArray tris(512);
 	rcIntArray arr(512);
 	rcIntArray samples(512);
-	Fix16 verts[256*3];
+	float verts[256*3];
 	rcHeightPatch hp;
 	int nPolyVerts = 0;
 	int maxhw = 0, maxhh = 0;
@@ -1202,7 +1199,7 @@ bool rcBuildPolyMeshDetail(rcContext* ctx, const rcPolyMesh& mesh, const rcCompa
 		ctx->log(RC_LOG_ERROR, "rcBuildPolyMeshDetail: Out of memory 'bounds' (%d).", mesh.npolys*4);
 		return false;
 	}
-	rcScopedDelete<Fix16> poly((Fix16*)rcAlloc(sizeof(Fix16)*nvp*3, RC_ALLOC_TEMP));
+	rcScopedDelete<float> poly((float*)rcAlloc(sizeof(float)*nvp*3, RC_ALLOC_TEMP));
 	if (!poly)
 	{
 		ctx->log(RC_LOG_ERROR, "rcBuildPolyMeshDetail: Out of memory 'poly' (%d).", nvp*3);
@@ -1261,7 +1258,7 @@ bool rcBuildPolyMeshDetail(rcContext* ctx, const rcPolyMesh& mesh, const rcCompa
 	int tcap = vcap*2;
 	
 	dmesh.nverts = 0;
-	dmesh.verts = (Fix16*)rcAlloc(sizeof(Fix16)*vcap*3, RC_ALLOC_PERM);
+	dmesh.verts = (float*)rcAlloc(sizeof(float)*vcap*3, RC_ALLOC_PERM);
 	if (!dmesh.verts)
 	{
 		ctx->log(RC_LOG_ERROR, "rcBuildPolyMeshDetail: Out of memory 'dmesh.verts' (%d).", vcap*3);
@@ -1285,9 +1282,9 @@ bool rcBuildPolyMeshDetail(rcContext* ctx, const rcPolyMesh& mesh, const rcCompa
 		{
 			if(p[j] == RC_MESH_NULL_IDX) break;
 			const unsigned short* v = &mesh.verts[p[j]*3];
-			poly[j*3+0] = Fix16(v[0])*cs;
-			poly[j*3+1] = Fix16(v[1])*ch;
-			poly[j*3+2] = Fix16(v[2])*cs;
+			poly[j*3+0] = v[0]*cs;
+			poly[j*3+1] = v[1]*ch;
+			poly[j*3+2] = v[2]*cs;
 			npoly++;
 		}
 		
@@ -1338,14 +1335,14 @@ bool rcBuildPolyMeshDetail(rcContext* ctx, const rcPolyMesh& mesh, const rcCompa
 			while (dmesh.nverts+nverts > vcap)
 				vcap += 256;
 			
-			Fix16* newv = (Fix16*)rcAlloc(sizeof(Fix16)*vcap*3, RC_ALLOC_PERM);
+			float* newv = (float*)rcAlloc(sizeof(float)*vcap*3, RC_ALLOC_PERM);
 			if (!newv)
 			{
 				ctx->log(RC_LOG_ERROR, "rcBuildPolyMeshDetail: Out of memory 'newv' (%d).", vcap*3);
 				return false;
 			}
 			if (dmesh.nverts)
-				memcpy(newv, dmesh.verts, sizeof(Fix16)*3*dmesh.nverts);
+				memcpy(newv, dmesh.verts, sizeof(float)*3*dmesh.nverts);
 			rcFree(dmesh.verts);
 			dmesh.verts = newv;
 		}
@@ -1423,7 +1420,7 @@ bool rcMergePolyMeshDetails(rcContext* ctx, rcPolyMeshDetail** meshes, const int
 	}
 	
 	mesh.nverts = 0;
-	mesh.verts = (Fix16*)rcAlloc(sizeof(Fix16)*maxVerts*3, RC_ALLOC_PERM);
+	mesh.verts = (float*)rcAlloc(sizeof(float)*maxVerts*3, RC_ALLOC_PERM);
 	if (!mesh.verts)
 	{
 		ctx->log(RC_LOG_ERROR, "rcBuildPolyMeshDetail: Out of memory 'dmesh.verts' (%d).", maxVerts*3);
