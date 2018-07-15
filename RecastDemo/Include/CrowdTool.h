@@ -60,7 +60,7 @@ class CrowdToolState : public SampleToolState
 	dtNavMesh* m_nav;
 	dtCrowd* m_crowd;
 	
-	float m_targetPos[3];
+	Fix16 m_targetPos[3];
 	dtPolyRef m_targetRef;
 
 	dtCrowdAgentDebugInfo m_agentDebug;

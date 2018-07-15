@@ -1199,6 +1199,33 @@ bool rcMergePolyMeshDetails(rcContext* ctx, rcPolyMeshDetail** meshes, const int
 
 /// @}
 
+
+/// Scales the vector by the specified value. (@p v * @p t)
+///  @param[out]	dest	The result vector. [(x, y, z)]
+///  @param[in]		v		The vector to scale. [(x, y, z)]
+///  @param[in]		t		The scaling factor.
+inline void rcVscale(float* dest, const float* v, const float t)
+{
+	dest[0] = v[0] * t;
+	dest[1] = v[1] * t;
+	dest[2] = v[2] * t;
+}
+
+/// Derives the signed xz-plane area of the triangle ABC, or the relationship of line AB to point C.
+///  @param[in]		a		Vertex A. [(x, y, z)]
+///  @param[in]		b		Vertex B. [(x, y, z)]
+///  @param[in]		c		Vertex C. [(x, y, z)]
+/// @return The signed xz-plane area of the triangle.
+inline float rcTriArea2D(const float* a, const float* b, const float* c)
+{
+	const float abx = b[0] - a[0];
+	const float abz = b[2] - a[2];
+	const float acx = c[0] - a[0];
+	const float acz = c[2] - a[2];
+	return acx * abz - abx * acz;
+}
+
+
 #endif // RECAST_H
 
 ///////////////////////////////////////////////////////////////////////////

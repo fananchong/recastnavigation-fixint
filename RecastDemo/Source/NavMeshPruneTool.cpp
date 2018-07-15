@@ -243,7 +243,7 @@ void NavMeshPruneTool::handleClick(const float* s, const float* p, bool shift)
 	dtNavMeshQuery* query = m_sample->getNavMeshQuery();
 	if (!query) return;
 	
-	dtVcopy(m_hitPos, p);
+	rcVcopy(m_hitPos, p);
 	m_hitPosSet = true;
 	
 	if (!m_flags)
@@ -255,7 +255,9 @@ void NavMeshPruneTool::handleClick(const float* s, const float* p, bool shift)
 	const float halfExtents[3] = { 2, 4, 2 };
 	dtQueryFilter filter;
 	dtPolyRef ref = 0;
-	query->findNearestPoly(p, halfExtents, &filter, &ref, 0);
+	Fix16 tempCenter[3] = { p[0], p[1], p[2] };
+	Fix16 temphalfExtents[3] = { halfExtents[0], halfExtents[1], halfExtents[2] };
+	query->findNearestPoly(tempCenter, temphalfExtents, &filter, &ref, 0);
 
 	floodNavmesh(nav, m_flags, ref, 1);
 }
