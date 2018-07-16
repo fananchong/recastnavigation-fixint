@@ -139,7 +139,7 @@ void duDebugDrawHeightfieldSolid(duDebugDraw* dd, const rcHeightfield& hf)
 {
 	if (!dd) return;
 
-	const float orig[3] = { hf.bmin[0], hf.bmin[1], hf.bmin[2] };
+	const float* orig = hf.bmin;
 	const float cs = hf.cs;
 	const float ch = hf.ch;
 	
@@ -172,7 +172,7 @@ void duDebugDrawHeightfieldWalkable(duDebugDraw* dd, const rcHeightfield& hf)
 {
 	if (!dd) return;
 
-    const float orig[3] = { hf.bmin[0], hf.bmin[1], hf.bmin[2] };
+	const float* orig = hf.bmin;
 	const float cs = hf.cs;
 	const float ch = hf.ch;
 	
@@ -683,7 +683,7 @@ void duDebugDrawRegionConnections(duDebugDraw* dd, const rcContourSet& cset, con
 {
 	if (!dd) return;
 	
-    const float orig[3] = { cset.bmin[0], cset.bmin[1], cset.bmin[2] };
+	const float* orig = cset.bmin;
 	const float cs = cset.cs;
 	const float ch = cset.ch;
 	
@@ -731,7 +731,7 @@ void duDebugDrawRawContours(duDebugDraw* dd, const rcContourSet& cset, const flo
 {
 	if (!dd) return;
 
-    const float orig[3] = { cset.bmin[0], cset.bmin[1], cset.bmin[2] };
+	const float* orig = cset.bmin;
 	const float cs = cset.cs;
 	const float ch = cset.ch;
 	
@@ -794,7 +794,7 @@ void duDebugDrawContours(duDebugDraw* dd, const rcContourSet& cset, const float 
 {
 	if (!dd) return;
 
-    const float orig[3] = { cset.bmin[0], cset.bmin[1], cset.bmin[2] };
+	const float* orig = cset.bmin;
 	const float cs = cset.cs;
 	const float ch = cset.ch;
 	
@@ -860,7 +860,7 @@ void duDebugDrawPolyMesh(duDebugDraw* dd, const struct rcPolyMesh& mesh)
 	const int nvp = mesh.nvp;
 	const float cs = mesh.cs;
 	const float ch = mesh.ch;
-    const float orig[3] = { mesh.bmin[0], mesh.bmin[1], mesh.bmin[2] };
+	const float* orig = mesh.bmin;
 	
 	dd->begin(DU_DRAW_TRIS);
 	
@@ -974,10 +974,7 @@ void duDebugDrawPolyMeshDetail(duDebugDraw* dd, const struct rcPolyMeshDetail& d
 		const unsigned int bverts = m[0];
 		const unsigned int btris = m[2];
 		const int ntris = (int)m[3];
-		float verts[3];
-        verts[0] = (&dmesh.verts[bverts * 3])[0];
-        verts[1] = (&dmesh.verts[bverts * 3])[1];
-        verts[2] = (&dmesh.verts[bverts * 3])[2];
+		const float* verts = &dmesh.verts[bverts*3];
 		const unsigned char* tris = &dmesh.tris[btris*4];
 
 		unsigned int color = duIntToCol(i, 192);
@@ -1000,10 +997,7 @@ void duDebugDrawPolyMeshDetail(duDebugDraw* dd, const struct rcPolyMeshDetail& d
 		const unsigned int bverts = m[0];
 		const unsigned int btris = m[2];
 		const int ntris = (int)m[3];
-        float verts[3];
-        verts[0] = (&dmesh.verts[bverts * 3])[0];
-        verts[1] = (&dmesh.verts[bverts * 3])[1];
-        verts[2] = (&dmesh.verts[bverts * 3])[2];
+		const float* verts = &dmesh.verts[bverts*3];
 		const unsigned char* tris = &dmesh.tris[btris*4];
 		
 		for (int j = 0; j < ntris; ++j)
@@ -1035,10 +1029,7 @@ void duDebugDrawPolyMeshDetail(duDebugDraw* dd, const struct rcPolyMeshDetail& d
 		const unsigned int bverts = m[0];
 		const unsigned int btris = m[2];
 		const int ntris = (int)m[3];
-        float verts[3];
-        verts[0] = (&dmesh.verts[bverts * 3])[0];
-        verts[1] = (&dmesh.verts[bverts * 3])[1];
-        verts[2] = (&dmesh.verts[bverts * 3])[2];
+		const float* verts = &dmesh.verts[bverts*3];
 		const unsigned char* tris = &dmesh.tris[btris*4];
 		
 		for (int j = 0; j < ntris; ++j)
@@ -1065,11 +1056,7 @@ void duDebugDrawPolyMeshDetail(duDebugDraw* dd, const struct rcPolyMeshDetail& d
 		const unsigned int* m = &dmesh.meshes[i*4];
 		const unsigned int bverts = m[0];
 		const int nverts = (int)m[1];
-        float verts[3];
-        verts[0] = (&dmesh.verts[bverts * 3])[0];
-        verts[1] = (&dmesh.verts[bverts * 3])[1];
-        verts[2] = (&dmesh.verts[bverts * 3])[2];
-
+		const float* verts = &dmesh.verts[bverts*3];
 		for (int j = 0; j < nverts; ++j)
 			dd->vertex(&verts[j*3], colv);
 	}
