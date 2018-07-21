@@ -21,6 +21,7 @@
 
 #include "ChunkyTriMesh.h"
 #include "MeshLoaderObj.h"
+#include <fix16.hpp>
 
 static const int MAX_CONVEXVOL_PTS = 12;
 struct ConvexVolume
@@ -82,8 +83,8 @@ class InputGeom
 public:
 	static const int MAX_OFFMESH_CONNECTIONS = 256;
 private:
-	float m_offMeshConVerts[MAX_OFFMESH_CONNECTIONS*3*2];
-	float m_offMeshConRads[MAX_OFFMESH_CONNECTIONS];
+	Fix16 m_offMeshConVerts[MAX_OFFMESH_CONNECTIONS*3*2];
+	Fix16 m_offMeshConRads[MAX_OFFMESH_CONNECTIONS];
 	unsigned char m_offMeshConDirs[MAX_OFFMESH_CONNECTIONS];
 	unsigned char m_offMeshConAreas[MAX_OFFMESH_CONNECTIONS];
 	unsigned short m_offMeshConFlags[MAX_OFFMESH_CONNECTIONS];
@@ -121,8 +122,8 @@ public:
 	/// @name Off-Mesh connections.
 	///@{
 	int getOffMeshConnectionCount() const { return m_offMeshConCount; }
-	const float* getOffMeshConnectionVerts() const { return m_offMeshConVerts; }
-	const float* getOffMeshConnectionRads() const { return m_offMeshConRads; }
+	const Fix16* getOffMeshConnectionVerts() const { return m_offMeshConVerts; }
+	const Fix16* getOffMeshConnectionRads() const { return m_offMeshConRads; }
 	const unsigned char* getOffMeshConnectionDirs() const { return m_offMeshConDirs; }
 	const unsigned char* getOffMeshConnectionAreas() const { return m_offMeshConAreas; }
 	const unsigned short* getOffMeshConnectionFlags() const { return m_offMeshConFlags; }

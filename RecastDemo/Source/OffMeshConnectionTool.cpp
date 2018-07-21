@@ -91,10 +91,10 @@ void OffMeshConnectionTool::handleClick(const float* /*s*/, const float* p, bool
 		// Find nearest link end-point
 		float nearestDist = FLT_MAX;
 		int nearestIndex = -1;
-		const float* verts = geom->getOffMeshConnectionVerts();
+		const Fix16* verts = geom->getOffMeshConnectionVerts();
 		for (int i = 0; i < geom->getOffMeshConnectionCount()*2; ++i)
 		{
-			const float* v = &verts[i*3];
+			const float v[3] = { (&verts[i * 3])[0], (&verts[i * 3])[1], (&verts[i * 3])[2] };
 			float d = rcVdistSqr(p, v);
 			if (d < nearestDist)
 			{

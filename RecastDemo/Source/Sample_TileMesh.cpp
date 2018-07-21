@@ -1123,10 +1123,8 @@ unsigned char* Sample_TileMesh::buildTileMesh(const int tx, const int ty, const 
 
 		class helper {
 		public:
-			~helper() { delete[] mv1; delete[] mv2; delete[] mv3; }
+			~helper() { delete[] mv1; }
 			Fix16* mv1;
-			Fix16* mv2;
-			Fix16* mv3;
 		}temphelper;
 		
 		dtNavMeshCreateParams params;
@@ -1150,23 +1148,8 @@ unsigned char* Sample_TileMesh::buildTileMesh(const int tx, const int ty, const 
 		params.detailVertsCount = m_dmesh->nverts;
 		params.detailTris = m_dmesh->tris;
 		params.detailTriCount = m_dmesh->ntris;
-
-		temphelper.mv2 = new Fix16[InputGeom::MAX_OFFMESH_CONNECTIONS * 3 * 2];
-		auto temp2 = m_geom->getOffMeshConnectionVerts();
-		for (size_t i = 0; i < InputGeom::MAX_OFFMESH_CONNECTIONS * 3 * 2; i++)
-		{
-			temphelper.mv2[i] = temp2[i];
-		}
-		params.offMeshConVerts = temphelper.mv2;
-
-		temphelper.mv3 = new Fix16[InputGeom::MAX_OFFMESH_CONNECTIONS];
-		auto temp3 = m_geom->getOffMeshConnectionRads();
-		for (size_t i = 0; i < InputGeom::MAX_OFFMESH_CONNECTIONS; i++)
-		{
-			temphelper.mv3[i] = temp3[i];
-		}
-		params.offMeshConRad = temphelper.mv3;
-
+		params.offMeshConVerts = m_geom->getOffMeshConnectionVerts();
+		params.offMeshConRad = m_geom->getOffMeshConnectionRads();
 		params.offMeshConDir = m_geom->getOffMeshConnectionDirs();
 		params.offMeshConAreas = m_geom->getOffMeshConnectionAreas();
 		params.offMeshConFlags = m_geom->getOffMeshConnectionFlags();

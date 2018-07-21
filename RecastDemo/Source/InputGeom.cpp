@@ -30,6 +30,7 @@
 #include "RecastDebugDraw.h"
 #include "DetourNavMesh.h"
 #include "Sample.h"
+#include "DetourCommon.h"
 
 static bool intersectSegmentTriangle(const float* sp, const float* sq,
 									 const float* a, const float* b, const float* c,
@@ -236,11 +237,18 @@ bool InputGeom::loadGeomSet(rcContext* ctx, const std::string& filepath)
 			// Off-mesh connection
 			if (m_offMeshConCount < MAX_OFFMESH_CONNECTIONS)
 			{
-				float* v = &m_offMeshConVerts[m_offMeshConCount*3*2];
+				Fix16* v = &m_offMeshConVerts[m_offMeshConCount*3*2];
 				int bidir, area = 0, flags = 0;
 				float rad;
+				float temp0, temp1, temp2, temp3, temp4, temp5;
 				sscanf(row+1, "%f %f %f  %f %f %f %f %d %d %d",
-					   &v[0], &v[1], &v[2], &v[3], &v[4], &v[5], &rad, &bidir, &area, &flags);
+					   &temp0, &temp1, &temp2, &temp3, &temp4, &temp5, &rad, &bidir, &area, &flags);
+				v[0] = temp0;
+				v[1] = temp1;
+				v[2] = temp2;
+				v[3] = temp3;
+				v[4] = temp4;
+				v[5] = temp5;
 				m_offMeshConRads[m_offMeshConCount] = rad;
 				m_offMeshConDirs[m_offMeshConCount] = (unsigned char)bidir;
 				m_offMeshConAreas[m_offMeshConCount] = (unsigned char)area;
@@ -363,13 +371,13 @@ bool InputGeom::saveGeomSet(const BuildSettings* settings)
 	// Store off-mesh links.
 	for (int i = 0; i < m_offMeshConCount; ++i)
 	{
-		const float* v = &m_offMeshConVerts[i*3*2];
+		const Fix16* v = &m_offMeshConVerts[i*3*2];
 		const float rad = m_offMeshConRads[i];
 		const int bidir = m_offMeshConDirs[i];
 		const int area = m_offMeshConAreas[i];
 		const int flags = m_offMeshConFlags[i];
 		fprintf(fp, "c %f %f %f  %f %f %f  %f %d %d %d\n",
-				v[0], v[1], v[2], v[3], v[4], v[5], rad, bidir, area, flags);
+				float(v[0]), float(v[1]), float(v[2]), float(v[3]), float(v[4]), float(v[5]), rad, bidir, area, flags);
 	}
 
 	// Convex volumes
@@ -474,24 +482,28 @@ void InputGeom::addOffMeshConnection(const float* spos, const float* epos, const
 									 unsigned char bidir, unsigned char area, unsigned short flags)
 {
 	if (m_offMeshConCount >= MAX_OFFMESH_CONNECTIONS) return;
-	float* v = &m_offMeshConVerts[m_offMeshConCount*3*2];
+	Fix16* v = &m_offMeshConVerts[m_offMeshConCount*3*2];
 	m_offMeshConRads[m_offMeshConCount] = rad;
 	m_offMeshConDirs[m_offMeshConCount] = bidir;
 	m_offMeshConAreas[m_offMeshConCount] = area;
 	m_offMeshConFlags[m_offMeshConCount] = flags;
 	m_offMeshConId[m_offMeshConCount] = 1000 + m_offMeshConCount;
-	rcVcopy(&v[0], spos);
-	rcVcopy(&v[3], epos);
+	v[0] = spos[0];
+	v[1] = spos[1];
+	v[2] = spos[2];
+	v[3] = epos[0];
+	v[4] = epos[1];
+	v[5] = epos[2];
 	m_offMeshConCount++;
 }
 
 void InputGeom::deleteOffMeshConnection(int i)
 {
 	m_offMeshConCount--;
-	float* src = &m_offMeshConVerts[m_offMeshConCount*3*2];
-	float* dst = &m_offMeshConVerts[i*3*2];
-	rcVcopy(&dst[0], &src[0]);
-	rcVcopy(&dst[3], &src[3]);
+	Fix16* src = &m_offMeshConVerts[m_offMeshConCount*3*2];
+	Fix16* dst = &m_offMeshConVerts[i*3*2];
+	dtVcopy(&dst[0], &src[0]);
+	dtVcopy(&dst[3], &src[3]);
 	m_offMeshConRads[i] = m_offMeshConRads[m_offMeshConCount];
 	m_offMeshConDirs[i] = m_offMeshConDirs[m_offMeshConCount];
 	m_offMeshConAreas[i] = m_offMeshConAreas[m_offMeshConCount];
@@ -507,7 +519,7 @@ void InputGeom::drawOffMeshConnections(duDebugDraw* dd, bool hilight)
 	dd->begin(DU_DRAW_LINES, 2.0f);
 	for (int i = 0; i < m_offMeshConCount; ++i)
 	{
-		float* v = &m_offMeshConVerts[i*3*2];
+		Fix16* v = &m_offMeshConVerts[i*3*2];
 
 		dd->vertex(v[0],v[1],v[2], baseColor);
 		dd->vertex(v[0],v[1]+0.2f,v[2], baseColor);
