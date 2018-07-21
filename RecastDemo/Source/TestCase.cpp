@@ -160,10 +160,17 @@ bool TestCase::load(const std::string& filePath)
 			test->expand = false;
 			test->next = m_tests;
 			m_tests = test;
+			float temps0, temps1, temps2, tempe0, tempe1, tempe2;
 			sscanf(row+2, "%f %f %f %f %f %f %hx %hx",
-				   &test->spos[0], &test->spos[1], &test->spos[2],
-				   &test->epos[0], &test->epos[1], &test->epos[2],
+				   &temps0, &temps1, &temps2,
+				   &tempe0, &tempe1, &tempe2,
 				   &test->includeFlags, &test->excludeFlags);
+			test->spos[0] = temps0;
+			test->spos[1] = temps1;
+			test->spos[2] = temps2;
+			test->epos[0] = tempe0;
+			test->epos[1] = tempe1;
+			test->epos[2] = tempe2;
 		}
 		else if (row[0] == 'r' && row[1] == 'c')
 		{
@@ -174,10 +181,17 @@ bool TestCase::load(const std::string& filePath)
 			test->expand = false;
 			test->next = m_tests;
 			m_tests = test;
-			sscanf(row+2, "%f %f %f %f %f %f %hx %hx",
-				   &test->spos[0], &test->spos[1], &test->spos[2],
-				   &test->epos[0], &test->epos[1], &test->epos[2],
-				   &test->includeFlags, &test->excludeFlags);
+			float temps0, temps1, temps2, tempe0, tempe1, tempe2;
+			sscanf(row + 2, "%f %f %f %f %f %f %hx %hx",
+				&temps0, &temps1, &temps2,
+				&tempe0, &tempe1, &tempe2,
+				&test->includeFlags, &test->excludeFlags);
+			test->spos[0] = temps0;
+			test->spos[1] = temps1;
+			test->spos[2] = temps2;
+			test->epos[0] = tempe0;
+			test->epos[1] = tempe1;
+			test->epos[2] = tempe2;
 		}
 	}
 	
@@ -205,8 +219,8 @@ void TestCase::doTests(dtNavMesh* navmesh, dtNavMeshQuery* navquery)
 	
 	static const int MAX_POLYS = 256;
 	dtPolyRef polys[MAX_POLYS];
-	float straight[MAX_POLYS*3];
-	const float polyPickExt[3] = {2,4,2};
+	Fix16 straight[MAX_POLYS*3];
+	const Fix16 polyPickExt[3] = {2,4,2};
 	
 	for (Test* iter = m_tests; iter; iter = iter->next)
 	{
@@ -263,16 +277,16 @@ void TestCase::doTests(dtNavMesh* navmesh, dtNavMeshQuery* navquery)
 			}
 			if (iter->nstraight)
 			{
-				iter->straight = new float[iter->nstraight*3];
-				memcpy(iter->straight, straight, sizeof(float)*3*iter->nstraight);
+				iter->straight = new Fix16[iter->nstraight*3];
+				memcpy(iter->straight, straight, sizeof(Fix16)*3*iter->nstraight);
 			}
 		}
 		else if (iter->type == TEST_RAYCAST)
 		{
-			float t = 0;
-			float hitNormal[3], hitPos[3];
+			Fix16 t = 0;
+			Fix16 hitNormal[3], hitPos[3];
 			
-			iter->straight = new float[2*3];
+			iter->straight = new Fix16[2*3];
 			iter->nstraight = 2;
 			
 			iter->straight[0] = iter->spos[0];
@@ -299,7 +313,7 @@ void TestCase::doTests(dtNavMesh* navmesh, dtNavMeshQuery* navquery)
 			// Adjust height.
 			if (iter->npolys > 0)
 			{
-				float h = 0;
+				Fix16 h = 0;
 				navquery->getPolyHeight(polys[iter->npolys-1], hitPos, &h);
 				hitPos[1] = h;
 			}
@@ -333,7 +347,7 @@ void TestCase::handleRender()
 	glBegin(GL_LINES);
 	for (Test* iter = m_tests; iter; iter = iter->next)
 	{
-		float dir[3];
+		Fix16 dir[3];
 		dtVsub(dir, iter->epos, iter->spos);
 		dtVnormalize(dir);
 		glColor4ub(128,25,0,192);
@@ -396,7 +410,7 @@ bool TestCase::handleRenderOverlay(double* proj, double* model, int* view)
 
 	for (Test* iter = m_tests; iter; iter = iter->next)
 	{
-		float pt[3], dir[3];
+		Fix16 pt[3], dir[3];
 		if (iter->nstraight)
 		{
 			dtVcopy(pt, &iter->straight[3]);
