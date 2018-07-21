@@ -605,7 +605,9 @@ bool Sample_TileMesh::handleBuild()
 	}
 
 	dtNavMeshParams params;
-	rcVcopy(params.orig, m_geom->getNavMeshBoundsMin());
+	params.orig[0] = m_geom->getNavMeshBoundsMin()[0];
+	params.orig[1] = m_geom->getNavMeshBoundsMin()[1];
+	params.orig[2] = m_geom->getNavMeshBoundsMin()[2];
 	params.tileWidth = m_tileSize*m_cellSize;
 	params.tileHeight = m_tileSize*m_cellSize;
 	params.maxTiles = m_maxTiles;
@@ -1118,6 +1120,14 @@ unsigned char* Sample_TileMesh::buildTileMesh(const int tx, const int ty, const 
 				m_pmesh->flags[i] = SAMPLE_POLYFLAGS_WALK | SAMPLE_POLYFLAGS_DOOR;
 			}
 		}
+
+		class helper {
+		public:
+			~helper() { delete[] mv1; delete[] mv2; delete[] mv3; }
+			Fix16* mv1;
+			Fix16* mv2;
+			Fix16* mv3;
+		}temphelper;
 		
 		dtNavMeshCreateParams params;
 		memset(&params, 0, sizeof(params));
@@ -1129,12 +1139,34 @@ unsigned char* Sample_TileMesh::buildTileMesh(const int tx, const int ty, const 
 		params.polyCount = m_pmesh->npolys;
 		params.nvp = m_pmesh->nvp;
 		params.detailMeshes = m_dmesh->meshes;
-		params.detailVerts = m_dmesh->verts;
+
+		temphelper.mv1 = new Fix16[m_dmesh->nverts];
+		for (int i = 0; i < m_dmesh->nverts; i++)
+		{
+			temphelper.mv1[i] = m_dmesh->verts[i];
+		}
+		params.detailVerts = temphelper.mv1;
+
 		params.detailVertsCount = m_dmesh->nverts;
 		params.detailTris = m_dmesh->tris;
 		params.detailTriCount = m_dmesh->ntris;
-		params.offMeshConVerts = m_geom->getOffMeshConnectionVerts();
-		params.offMeshConRad = m_geom->getOffMeshConnectionRads();
+
+		temphelper.mv2 = new Fix16[InputGeom::MAX_OFFMESH_CONNECTIONS * 3 * 2];
+		auto temp2 = m_geom->getOffMeshConnectionVerts();
+		for (size_t i = 0; i < InputGeom::MAX_OFFMESH_CONNECTIONS * 3 * 2; i++)
+		{
+			temphelper.mv2[i] = temp2[i];
+		}
+		params.offMeshConVerts = temphelper.mv2;
+
+		temphelper.mv3 = new Fix16[InputGeom::MAX_OFFMESH_CONNECTIONS];
+		auto temp3 = m_geom->getOffMeshConnectionRads();
+		for (size_t i = 0; i < InputGeom::MAX_OFFMESH_CONNECTIONS; i++)
+		{
+			temphelper.mv3[i] = temp3[i];
+		}
+		params.offMeshConRad = temphelper.mv3;
+
 		params.offMeshConDir = m_geom->getOffMeshConnectionDirs();
 		params.offMeshConAreas = m_geom->getOffMeshConnectionAreas();
 		params.offMeshConFlags = m_geom->getOffMeshConnectionFlags();
@@ -1146,8 +1178,12 @@ unsigned char* Sample_TileMesh::buildTileMesh(const int tx, const int ty, const 
 		params.tileX = tx;
 		params.tileY = ty;
 		params.tileLayer = 0;
-		rcVcopy(params.bmin, m_pmesh->bmin);
-		rcVcopy(params.bmax, m_pmesh->bmax);
+		params.bmin[0] = m_pmesh->bmin[0];
+		params.bmin[1] = m_pmesh->bmin[1];
+		params.bmin[2] = m_pmesh->bmin[2];
+		params.bmax[0] = m_pmesh->bmax[0];
+		params.bmax[1] = m_pmesh->bmax[1];
+		params.bmax[2] = m_pmesh->bmax[2];
 		params.cs = m_cfg.cs;
 		params.ch = m_cfg.ch;
 		params.buildBvTree = true;

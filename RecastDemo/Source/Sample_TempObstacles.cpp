@@ -59,8 +59,8 @@ static const int EXPECTED_LAYERS_PER_TILE = 4;
 
 
 static bool isectSegAABB(const float* sp, const float* sq,
-						 const float* amin, const float* amax,
-						 float& tmin, float& tmax)
+						 const Fix16* amin, const Fix16* amax,
+	Fix16& tmin, Fix16& tmax)
 {
 	static const float EPS = 1e-6f;
 	
@@ -75,7 +75,7 @@ static bool isectSegAABB(const float* sp, const float* sq,
 		if (fabsf(d[i]) < EPS)
 		{
 			// Ray is parallel to slab. No hit if origin not within slab
-			if (sp[i] < amin[i] || sp[i] > amax[i])
+			if (sp[i] < float(amin[i]) || sp[i] > float(amax[i]))
 				return false;
 		}
 		else
@@ -87,8 +87,8 @@ static bool isectSegAABB(const float* sp, const float* sq,
 			// Make t1 be intersection with near plane, t2 with far plane
 			if (t1 > t2) rcSwap(t1, t2);
 			// Compute the intersection of slab intersections intervals
-			if (t1 > tmin) tmin = t1;
-			if (t2 < tmax) tmax = t2;
+			if (t1 > float(tmin)) tmin = t1;
+			if (t2 < float(tmax)) tmax = t2;
 			// Exit with no collision as soon as slab intersection becomes empty
 			if (tmin > tmax) return false;
 		}
@@ -423,9 +423,13 @@ int Sample_TempObstacles::rasterizeTileLayers(
 		header.tx = tx;
 		header.ty = ty;
 		header.tlayer = i;
-		dtVcopy(header.bmin, layer->bmin);
-		dtVcopy(header.bmax, layer->bmax);
-		
+		header.bmin[0] = layer->bmin[0];
+		header.bmin[1] = layer->bmin[1];
+		header.bmin[2] = layer->bmin[2];
+		header.bmax[0] = layer->bmax[0];
+		header.bmax[1] = layer->bmax[1];
+		header.bmax[2] = layer->bmax[2];
+
 		// Tile info.
 		header.width = (unsigned char)layer->width;
 		header.height = (unsigned char)layer->height;
@@ -460,7 +464,7 @@ int Sample_TempObstacles::rasterizeTileLayers(
 void drawTiles(duDebugDraw* dd, dtTileCache* tc)
 {
 	unsigned int fcol[6];
-	float bmin[3], bmax[3];
+	Fix16 bmin[3], bmax[3];
 
 	for (int i = 0; i < tc->getTileCount(); ++i)
 	{
@@ -564,7 +568,8 @@ void drawDetail(duDebugDraw* dd, dtTileCache* tc, const int tx, const int ty, in
 			return;
 		if (type == DRAWDETAIL_CONTOURS)
 		{
-			duDebugDrawTileCacheContours(dd, *bc.lcset, tile->header->bmin, params->cs, params->ch);
+			float temp[3] = { tile->header->bmin[0], tile->header->bmin[1], tile->header->bmin[2] };
+			duDebugDrawTileCacheContours(dd, *bc.lcset, temp, params->cs, params->ch);
 			continue;
 		}
 		
@@ -577,7 +582,8 @@ void drawDetail(duDebugDraw* dd, dtTileCache* tc, const int tx, const int ty, in
 
 		if (type == DRAWDETAIL_MESH)
 		{
-			duDebugDrawTileCachePolyMesh(dd, *bc.lmesh, tile->header->bmin, params->cs, params->ch);
+			float temp[3] = { tile->header->bmin[0], tile->header->bmin[1], tile->header->bmin[2] };
+			duDebugDrawTileCachePolyMesh(dd, *bc.lmesh, temp, params->cs, params->ch);
 			continue;
 		}
 
@@ -629,7 +635,7 @@ dtObstacleRef hitTestObstacle(const dtTileCache* tc, const float* sp, const floa
 		if (ob->state == DT_OBSTACLE_EMPTY)
 			continue;
 		
-		float bmin[3], bmax[3], t0,t1;
+		Fix16 bmin[3], bmax[3], t0,t1;
 		tc->getObstacleBounds(ob, bmin,bmax);
 		
 		if (isectSegAABB(sp,sq, bmin,bmax, t0,t1))
@@ -651,7 +657,7 @@ void drawObstacles(duDebugDraw* dd, const dtTileCache* tc)
 	{
 		const dtTileCacheObstacle* ob = tc->getObstacle(i);
 		if (ob->state == DT_OBSTACLE_EMPTY) continue;
-		float bmin[3], bmax[3];
+		Fix16 bmin[3], bmax[3];
 		tc->getObstacleBounds(ob, bmin,bmax);
 
 		unsigned int col = 0;
@@ -1165,9 +1171,10 @@ void Sample_TempObstacles::addTempObstacle(const float* pos)
 {
 	if (!m_tileCache)
 		return;
-	float p[3];
-	dtVcopy(p, pos);
+	Fix16 p[3];
+	p[0] = pos[0];
 	p[1] -= 0.5f;
+	p[2] = pos[2];
 	m_tileCache->addObstacle(p, 1.0f, 2.0f, 0);
 }
 
@@ -1238,7 +1245,9 @@ bool Sample_TempObstacles::handleBuild()
 	// Tile cache params.
 	dtTileCacheParams tcparams;
 	memset(&tcparams, 0, sizeof(tcparams));
-	rcVcopy(tcparams.orig, bmin);
+	tcparams.orig[0] = bmin[0];
+	tcparams.orig[1] = bmin[1];
+	tcparams.orig[2] = bmin[2];
 	tcparams.cs = m_cellSize;
 	tcparams.ch = m_cellHeight;
 	tcparams.width = (int)m_tileSize;
@@ -1276,7 +1285,9 @@ bool Sample_TempObstacles::handleBuild()
 
 	dtNavMeshParams params;
 	memset(&params, 0, sizeof(params));
-	rcVcopy(params.orig, bmin);
+	params.orig[0] = bmin[0];
+	params.orig[1] = bmin[1];
+	params.orig[2] = bmin[2];
 	params.tileWidth = m_tileSize*m_cellSize;
 	params.tileHeight = m_tileSize*m_cellSize;
 	params.maxTiles = m_maxTiles;
